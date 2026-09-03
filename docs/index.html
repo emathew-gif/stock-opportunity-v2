@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Opportunity of the Week</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:      #0a0a0a;
+    --ink2:     #3a3a3a;
+    --ink3:     #7a7a7a;
+    --paper:    #f5f2eb;
+    --paper2:   #ede9e0;
+    --paper3:   #e4dfd3;
+    --accent:   #c8410a;
+    --accent2:  #1a3a5c;
+    --green:    #1a6b3a;
+    --red:      #b52525;
+    --gold:     #b07d2a;
+    --border:   rgba(10,10,10,0.12);
+    --serif:    'DM Serif Display', Georgia, serif;
+    --sans:     'Instrument Sans', sans-serif;
+    --mono:     'DM Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    min-height: 56px;
+  }
+  .masthead-left {
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .masthead-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .masthead-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.1;
+  }
+  .masthead-right {
+    display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;
+  }
+  .week-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink3);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 420px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-left {
+    padding: 3rem 2.5rem;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--ink);
+    color: var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-left::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  .featured-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .featured-ticker {
+    font-family: var(--serif);
+    font-size: 80px;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    color: #fff;
+    margin-bottom: 0.25rem;
+  }
+  .featured-name {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 2rem;
+    font-weight: 400;
+  }
+  .key-metrics-row {
+    display: flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .key-metric {
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .key-metric-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+  }
+  .key-metric-value {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+  .key-metric-value.highlight {
+    color: #f5c842;
+  }
+  .key-metric-divider {
+    width: 1px;
+    background: rgba(255,255,255,0.12);
+    align-self: stretch;
+    margin: 2px 0;
+  }
+  .featured-thesis {
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.7);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 1.25rem;
+    margin-top: auto;
+  }
+  .risk-pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+  }
+  .risk-Growth     { background: rgba(26,58,92,0.4);  color: #7ab8f5; border: 1px solid rgba(122,184,245,0.3); }
+  .risk-Value      { background: rgba(176,125,42,0.3); color: #e8c97a; border: 1px solid rgba(232,201,122,0.3); }
+  .risk-Quality    { background: rgba(26,107,58,0.3);  color: #6eda9a; border: 1px solid rgba(110,218,154,0.3); }
+  .risk-Speculative{ background: rgba(200,65,10,0.3);  color: #f5a07a; border: 1px solid rgba(245,160,122,0.3); }
+  .risk-Turnaround { background: rgba(120,60,140,0.3); color: #d4a0f0; border: 1px solid rgba(212,160,240,0.3); }
+  .risk-default    { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.2); }
+
+  .hero-right {
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .hero-right-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 0.75rem;
+  }
+
+
+  /* Analyst bar */
+  .analyst-bar-wrap { margin-top: 0.25rem; }
+  .analyst-bar {
+    display: flex; height: 8px; border-radius: 2px; overflow: hidden; margin-bottom: 0.5rem;
+  }
+  .ab-sb  { background: #1a6b3a; }
+  .ab-b   { background: #3a9a5a; }
+  .ab-h   { background: #c8c020; }
+  .ab-s   { background: #d06020; }
+  .ab-ss  { background: #b52525; }
+  .analyst-legend {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+  }
+  .al-item { display: flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+  .al-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* 52w bar */
+  .week52-wrap { margin-top: 0.25rem; }
+  .week52-track { height: 6px; background: var(--paper3); border-radius: 3px; position: relative; margin-bottom: 0.5rem; }
+  .week52-fill  { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.8s cubic-bezier(.16,1,.3,1); }
+  .week52-marker {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 2px solid var(--paper);
+    transition: left 0.8s cubic-bezier(.16,1,.3,1);
+    margin-left: -5px;
+  }
+  .week52-labels { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+
+  /* Bull / Bear */
+  .case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .case-card {
+    padding: 0.875rem 1rem;
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .bull-card { background: rgba(26,107,58,0.06); border-left: 3px solid var(--green); color: var(--ink2); }
+  .bear-card { background: rgba(181,37,37,0.06);  border-left: 3px solid var(--red);   color: var(--ink2); }
+  .case-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.4rem; font-weight: 500; }
+  .bull-label { color: var(--green); }
+  .bear-label { color: var(--red); }
+
+  /* ── WATCHLIST ── */
+  .watchlist-section { padding: 2rem 2.5rem; }
+  .watchlist-header {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+    margin-bottom: 0;
+  }
+  .watchlist-title { font-family: var(--serif); font-size: 20px; }
+  .filter-row {
+    display: flex; gap: 0.5rem; align-items: center;
+  }
+  .filter-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink3);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .watchlist-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .watchlist-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  .watchlist-table th:hover { color: var(--ink); }
+  .watchlist-table th.sorted { color: var(--accent); }
+  .watchlist-table td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .watchlist-table tr { cursor: pointer; transition: background 0.1s; }
+  .watchlist-table tr:hover td { background: var(--paper2); }
+  .watchlist-table tr.selected td { background: var(--paper3); }
+  .watchlist-table tr.selected td:first-child { border-left: 3px solid var(--accent2); }
+  .watchlist-table tr.featured-row td:first-child { border-left: 3px solid var(--accent); }
+
+  .ticker-cell { display: flex; align-items: center; gap: 0.75rem; }
+  .ticker-sym  { font-family: var(--mono); font-weight: 500; font-size: 13px; }
+  .ticker-name { font-size: 11px; color: var(--ink3); }
+  .featured-star { color: var(--accent); font-size: 10px; margin-left: 2px; }
+
+  .price-cell { font-family: var(--mono); font-size: 13px; }
+  .chg-cell   { font-family: var(--mono); font-size: 12px; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+
+  .upside-cell { font-family: var(--mono); font-size: 12px; color: var(--accent2); font-weight: 500; }
+
+  .mini-score {
+    display: flex; gap: 2px; align-items: center;
+  }
+  .mini-bar {
+    width: 4px;
+    border-radius: 1px;
+    background: var(--paper3);
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-fill {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--accent2);
+    border-radius: 1px;
+  }
+
+  .composite-cell {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* risk pill in table (light bg version) */
+  .risk-pill-light {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--ink3);
+    background: var(--paper2);
+    white-space: nowrap;
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    margin: 0 2.5rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: none;
+    animation: slideDown 0.2s ease;
+  }
+  .detail-panel.visible { display: block; }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+  .detail-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+  }
+  .detail-col {
+    padding: 1.5rem;
+    border-right: 1px solid var(--border);
+  }
+  .detail-col:last-child { border-right: none; }
+  .detail-col-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 1rem;
+  }
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .metric-item {}
+  .metric-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); margin-bottom: 2px; }
+  .metric-value { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--ink); }
+
+  .thesis-text { font-size: 12px; line-height: 1.65; color: var(--ink2); }
+  .no-thesis   { font-size: 12px; color: var(--ink3); font-style: italic; }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 1.25rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-left  { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+  .footer-right { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+  .disclaimer   { font-size: 10px; color: var(--ink3); max-width: 600px; line-height: 1.5; margin-top: 0.25rem; }
+
+  /* ── EARNINGS BADGE ── */
+  .earnings-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgba(176,125,42,0.15);
+    color: var(--gold);
+    border: 1px solid rgba(176,125,42,0.3);
+    white-space: nowrap;
+  }
+
+
+  /* Sector pill */
+  .sector-pill {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--accent2);
+    background: rgba(26,58,92,0.06);
+    white-space: nowrap;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { min-height: 320px; }
+    .detail-inner { grid-template-columns: 1fr; }
+    .detail-col { border-right: none; border-bottom: 1px solid var(--border); }
+    .detail-col:last-child { border-bottom: none; }
+    .case-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <span class="masthead-label">Broad Market</span>
+    <span class="masthead-label">SPY Top 150</span>
+    <span class="masthead-label" id="hero-sector"></span>
+  </div>
+  <div class="masthead-title">Stock Opportunity<br><em>of the Week</em></div>
+  <div class="masthead-right">
+    <span class="week-badge" id="week-label">—</span>
+  </div>
+</header>
+
+<!-- HERO: featured pick -->
+<section class="hero" id="hero-section">
+  <div class="hero-left">
+    <div>
+      <div class="featured-eyebrow" id="hero-eyebrow">&#9733; Featured Pick</div>
+      <div class="featured-ticker" id="h-ticker">—</div>
+      <div class="featured-name"   id="h-name">—</div>
+      <span class="risk-pill risk-default" id="h-risk">—</span>
+    </div>
+    <div>
+      <div class="key-metrics-row">
+        <div class="key-metric">
+          <span class="key-metric-label">Current Price</span>
+          <span class="key-metric-value" id="h-price">—</span>
+        </div>
+        <div class="key-metric-divider"></div>
+        <div class="key-metric">
+          <span class="key-metric-label">Avg. Analyst Target</span>
+          <span class="key-metric-value highlight" id="h-target">—</span>
+        </div>
+        <div class="key-metric-divider"></div>
+        <div class="key-metric">
+          <span class="key-metric-label">Upside</span>
+          <span class="key-metric-value highlight" id="h-upside">—</span>
+        </div>
+      </div>
+      <div class="featured-thesis" id="h-thesis">—</div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div>
+      <div class="section-label">Analyst Consensus</div>
+      <div class="analyst-bar-wrap">
+        <div class="analyst-bar" id="analyst-bar"></div>
+        <div class="analyst-legend" id="analyst-legend"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">52-Week Range</div>
+      <div class="week52-wrap">
+        <div class="week52-track">
+          <div class="week52-fill" id="w52-fill" style="width:0%"></div>
+          <div class="week52-marker" id="w52-marker" style="left:0%"></div>
+        </div>
+        <div class="week52-labels">
+          <span id="w52-low">—</span>
+          <span id="w52-cur" style="color:var(--ink);font-weight:500">—</span>
+          <span id="w52-high">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-grid" id="case-grid"></div>
+  </div>
+</section>
+
+<!-- WATCHLIST -->
+<section class="watchlist-section">
+  <div class="watchlist-header">
+    <div class="watchlist-title">Watchlist</div>
+    <div class="filter-row" style="gap:1rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:0.4rem">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink3)">SECTOR</span>
+        <select id="sector-filter" onchange="filterSector(this.value)"
+          style="font-family:var(--mono);font-size:10px;padding:4px 8px;border:1px solid var(--border);
+                 background:var(--paper);color:var(--ink);border-radius:2px;cursor:pointer">
+          <option value="all">All Sectors</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.4rem">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink3)">SORT</span>
+        <button class="filter-btn active" onclick="sortTable('score_composite')">Score</button>
+        <button class="filter-btn" onclick="sortTable('upside_pct')">Upside</button>
+        <button class="filter-btn" onclick="sortTable('pe_ttm')">P/E</button>
+        <button class="filter-btn" onclick="sortTable('roe')">ROE</button>
+      </div>
+    </div>
+  </div>
+
+  <table class="watchlist-table" id="watchlist">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Stock</th>
+        <th>Sector</th>
+        <th>Price</th>
+                <th>Avg. Target</th>
+        <th>Upside</th>
+        <th>P/E</th>
+        <th>ROE</th>
+        <th>Rev Gr.</th>
+        <th>Scores</th>
+        <th>Composite</th>
+        <th>Risk</th>
+      </tr>
+    </thead>
+    <tbody id="watchlist-body"></tbody>
+  </table>
+</section>
+
+
+
+<footer class="footer">
+  <div class="footer-left">
+    <div>Generated <span id="gen-date">—</span> &nbsp;·&nbsp; Equal-weighted scoring &nbsp;·&nbsp; SPY Top 150</div>
+    <div class="disclaimer">For informational purposes only. Not financial advice. Past performance does not guarantee future results.</div>
+  </div>
+  <div class="footer-right">Stock Opportunity of the Week</div>
+</footer>
+
+<script>
+const DATA = {"generated_at": "2026-09-03", "week_label": "v2 \u00b7 Week of 03 Sep 2026", "sector": "Broad Market", "universe": "SPY Top 150 \u00b7 v2", "weights": {"value": 0.25, "momentum": 0.1, "quality": 0.3, "sentiment": 0.2, "catalyst": 0.15}, "picks": [{"rank": 1, "ticker": "CVX", "name": "Chevron Corp", "sector": "Energy", "is_featured": true, "price": 211.78, "day_chg": 0.35, "pe_ttm": 18.92, "pb": 1.74, "roe": 10.98, "net_margin": 43.65, "rev_growth": 11.17, "w52_pos": 0.957, "w52_high": 214.71, "w52_low": 146.49, "mean_target": 221.03, "upside_pct": 4.4, "has_earnings": false, "risk_tag": "Value", "thesis": "Chevron trades at 18.9x trailing earnings with 25 of 30 analysts rating it buy or strong buy, but the stock has already returned 31.3% over the past year excluding the last month. The modest 4.4% upside to analyst targets suggests the market has priced in much of the near-term optimism.", "bull_case": "Oil and gas remain in structural undersupply due to years of underinvestment, and Chevron's strong balance sheet with a 0.20 debt-to-equity ratio gives it room to return cash to shareholders while funding projects. The company's gross profit per dollar of assets of 0.28 and 11.2% year-over-year revenue growth demonstrate solid operational leverage in a favorable commodity environment.", "bear_case": "Chevron faces execution risk on major capital projects, and energy companies often disappoint on guidance or project returns when commodity headwinds hit. Valuation risk is real here: at 18.9x trailing earnings and a 1.9x price-to-sales ratio, much of the current cycle's strength appears already reflected in the stock price, meaning multiple compression could offset earnings gains if oil prices slip. Broader market risk includes a potential economic slowdown that would pressure crude demand and prices, which would directly flow through to earnings given the cyclical nature of the energy sector.", "score_composite": 0.631, "scores": {"value": 0.861, "momentum": 0.673, "quality": 0.553, "sentiment": 0.607, "catalyst": 0.546}, "analyst": {"strong_buy": 7, "buy": 18, "hold": 4, "sell": 1, "strong_sell": 0, "total": 30}}, {"rank": 2, "ticker": "BMY", "name": "Bristol-Myers Squibb Co", "sector": "Healthcare", "is_featured": false, "price": 67.66, "day_chg": 1.11, "pe_ttm": 14.21, "pb": 5.27, "roe": 46.76, "net_margin": 71.66, "rev_growth": 3.11, "w52_pos": 0.962, "w52_high": 68.64, "w52_low": 42.52, "mean_target": 67.63, "upside_pct": -0.0, "has_earnings": false, "risk_tag": "Quality", "thesis": "Bristol-Myers Squibb trades at flat valuation against analyst targets after a 41% run-up over the past year, making this a moment to assess whether the gains have already priced in the company's pharmaceutical pipeline and margin improvements. The stock's extreme operating margin expansion \u2014 now running 25.5% versus a 5-year average of 13.6% \u2014 suggests current earnings may sit at a cyclical peak rather than a sustainable new baseline.", "bull_case": "BMY's 46.8% return on equity and 71.7% gross margin showcase a fortress business generating strong cash returns, and the improving analyst consensus over the past three months signals confidence in either pipeline execution or cost discipline. At 14.2 times trailing earnings, the valuation is defensible for a large-cap pharma company that still grew revenue 3.1% year-over-year.", "bear_case": "The debt-to-equity ratio of 1.93 is elevated for a healthcare company, which leaves limited financial flexibility if major drug launches underperform or if pipeline failures force restructuring charges. Operating margin at 25.5% is nearly double its historical 13.6% average, implying that current earnings power may not persist once one-time gains or cost cuts fully annualize. Rising interest rates and potential recession would also pressure biotech equity valuations broadly, and with analysts seeing zero upside from current levels and the sell-side split between 7 strong buys and 2 sells across 35 total ratings, there is no consensus conviction supporting further appreciation.", "score_composite": 0.56, "scores": {"value": 0.617, "momentum": 0.74, "quality": 0.53, "sentiment": 0.475, "catalyst": 0.656}, "analyst": {"strong_buy": 7, "buy": 8, "hold": 18, "sell": 2, "strong_sell": 0, "total": 35}}, {"rank": 3, "ticker": "GOOG", "name": "Alphabet Inc", "sector": "Comm Services", "is_featured": false, "price": 333.78, "day_chg": 0.53, "pe_ttm": 17.31, "pb": 6.76, "roe": 50.84, "net_margin": 60.9, "rev_growth": 20.05, "w52_pos": 0.593, "w52_high": 408.61, "w52_low": 224.79, "mean_target": 425.66, "upside_pct": 27.5, "has_earnings": false, "risk_tag": "Quality", "thesis": "Alphabet trades at a reasonable 17.3x trailing earnings with 20% revenue growth and exceptional 50.8% return on equity, while 63 of 70 analysts rate it buy or strong buy. The 27.5% gap to a $425.66 average price target suggests meaningful upside remains even after the stock has gained 46.8% over the past year excluding the most recent month.", "bull_case": "Alphabet's core search business continues to generate enormous cash with 60.9% gross margins, and the company is deploying AI across advertising, cloud, and enterprise products. At 17.3x earnings with double-digit revenue growth and a fortress balance sheet carrying only 0.15x debt to equity, the valuation does not appear stretched relative to quality and growth.", "bear_case": "Execution risk is real: Alphabet faces intensifying AI competition from OpenAI, Microsoft, and others who could disrupt search monetization or reduce advertising spend, and any earnings disappointment would likely cause multiple compression. Valuation risk exists because the current 17.3x multiple assumes the company maintains near-20% revenue growth rates; if growth slows to historical norms around 10-12%, the multiple would likely contract despite strong fundamentals. Macro risk includes potential recession or sustained higher interest rates that could pressure digital advertising budgets, the source of roughly 80% of Alphabet's revenue.", "score_composite": 0.558, "scores": {"value": 0.482, "momentum": 0.817, "quality": 0.756, "sentiment": 0.848, "catalyst": 0.248}, "analyst": {"strong_buy": 20, "buy": 43, "hold": 7, "sell": 0, "strong_sell": 0, "total": 70}}, {"rank": 4, "ticker": "GOOGL", "name": "Alphabet Inc", "sector": "Comm Services", "is_featured": false, "price": 337.12, "day_chg": 0.63, "pe_ttm": 17.31, "pb": 6.76, "roe": 50.84, "net_margin": 60.9, "rev_growth": 20.05, "w52_pos": 0.611, "w52_high": 408.61, "w52_low": 224.79, "mean_target": 429.65, "upside_pct": 27.4, "has_earnings": false, "risk_tag": "Quality", "thesis": "Alphabet combines accelerating revenue growth at 20.1% with fortress-like fundamentals and analyst consensus that has only strengthened over the past quarter. With 63 of 70 analysts rating it buy or strong buy and 27% upside to consensus targets, the stock deserves attention from investors seeking exposure to a profitable tech leader that isn't trading at bubble valuations.", "bull_case": "The company generates 50.8% returns on equity while maintaining a lean balance sheet with only 0.15 debt-to-equity, meaning it can fund its 20.1% revenue growth and shareholder returns without financial strain. At 17.3x trailing earnings, Alphabet trades at a modest discount to many peers despite being one of the few megacaps actually growing revenue at double-digit rates.", "bear_case": "Google faces real regulatory pressures across antitrust investigations that could force structural changes or revenue restrictions if enforcement escalates\u2014a risk that consensus pricing may not fully reflect. The 46.8% rally over the past year excluding this month suggests much of the good news is already priced in, and if advertiser spending softens during an economic slowdown, earnings growth could easily disappoint relative to these elevated expectations. Rising interest rates also create headwinds for any stock carrying a 6.8x price-to-book multiple, which assumes sustained premium valuation.", "score_composite": 0.558, "scores": {"value": 0.482, "momentum": 0.817, "quality": 0.756, "sentiment": 0.846, "catalyst": 0.248}, "analyst": {"strong_buy": 20, "buy": 43, "hold": 7, "sell": 0, "strong_sell": 0, "total": 70}}, {"rank": 5, "ticker": "FDX", "name": "FedEx Corp", "sector": "Industrials", "is_featured": false, "price": 316.54, "day_chg": -2.57, "pe_ttm": 17.6, "pb": 2.55, "roe": 15.11, "net_margin": 62.11, "rev_growth": 7.73, "w52_pos": 0.521, "w52_high": 404.03, "w52_low": 221.31, "mean_target": 358.53, "upside_pct": 13.3, "has_earnings": true, "risk_tag": "Quality", "thesis": "FedEx is trading at a reasonable valuation with meaningful upside to analyst targets, supported by improving consensus and solid operational fundamentals. The stock has already run 44 percent over the past year excluding the last month, so timing and execution matter.", "bull_case": "At 17.6 times trailing earnings with 13.3 percent upside to the mean analyst target of 358.53, FedEx offers a fair entry point for a logistics company generating 15.1 percent returns on equity. Revenue growth of 7.7 percent year-over-year is sustainable for an asset-heavy business, and 25 of 35 analysts rating it buy or strong buy suggests institutional confidence in near-term execution.", "bear_case": "FedEx earnings likely reflect a cyclical upturn in freight demand and e-commerce volumes that could normalize or deteriorate if economic activity slows or recession fears mount. At 0.81 times debt to equity with significant ongoing capital requirements for aircraft and sorting facilities, the company has limited financial flexibility if revenue disappoints. The stock's 44 percent run-up in the past year already prices in optimism about cost discipline and pricing power, leaving little room for a miss when third-quarter earnings cycle begins to reveal seasonal demand patterns.", "score_composite": 0.554, "scores": {"value": 0.869, "momentum": 0.793, "quality": 0.657, "sentiment": 0.58, "catalyst": 0.207}, "analyst": {"strong_buy": 9, "buy": 15, "hold": 9, "sell": 2, "strong_sell": 0, "total": 35}}, {"rank": 6, "ticker": "LMT", "name": "Lockheed Martin Corp", "sector": "Industrials", "is_featured": false, "price": 531.55, "day_chg": -2.38, "pe_ttm": 22.0, "pb": 13.2, "roe": 86.24, "net_margin": 11.8, "rev_growth": 7.2, "w52_pos": 0.37, "w52_high": 692.0, "w52_low": 437.25, "mean_target": 649.01, "upside_pct": 22.1, "has_earnings": false, "risk_tag": "Quality", "thesis": "Lockheed Martin trades at 22 times trailing earnings with 28 of 39 analysts rating it buy or strong buy, while the stock has already returned 23.7 percent over the past year excluding this month. The disconnect between rich valuation and embedded analyst optimism deserves scrutiny before chasing further upside.", "bull_case": "The company generates an extraordinary 86.2 percent return on equity, signaling efficient capital deployment in a mission-critical business where defense spending remains structurally supported by geopolitical tensions and a 7.2 percent year-over-year revenue growth rate that outpaces inflation. At a 22.1 percent upside to the mean analyst target of 649 dollars, the market is pricing in only modest multiple expansion despite a durable competitive moat.", "bear_case": "First, earnings delivered on June 30 are now seven months old, and a significant miss on margins or forward guidance could unwind recent gains given the stock has already captured most near-term optimism. Second, at 22 times earnings the valuation appears to assume defense budgets and contract awards remain strong cyclically, leaving little room for disappointment if government spending moderates or procurement delays occur. Third, the company carries 2.34 times debt to equity with a current ratio of only 1.19, meaning rising interest rates tighten financial flexibility and a revenue shortfall would pressure liquidity more than a balance sheet with lower leverage.", "score_composite": 0.545, "scores": {"value": 0.65, "momentum": 0.573, "quality": 0.476, "sentiment": 0.724, "catalyst": 0.433}, "analyst": {"strong_buy": 6, "buy": 7, "hold": 14, "sell": 1, "strong_sell": 0, "total": 28}}, {"rank": 7, "ticker": "COP", "name": "ConocoPhillips", "sector": "Energy", "is_featured": false, "price": 137.2, "day_chg": 0.74, "pe_ttm": 16.32, "pb": 1.94, "roe": 14.32, "net_margin": 46.31, "rev_growth": 9.6, "w52_pos": 0.997, "w52_high": 137.37, "w52_low": 85.57, "mean_target": 148.31, "upside_pct": 8.1, "has_earnings": false, "risk_tag": "Value", "thesis": "ConocoPhillips remains an attractive value play in energy with solid fundamentals, 23 of 31 analysts rating it buy or strong buy, and 8.1 percent upside to consensus targets. The stock has already delivered 41.4 percent returns over the past year excluding the last month, but valuation multiples suggest room to run.", "bull_case": "The company trades at 16.3x trailing earnings with a return on equity of 14.3 percent and a debt-to-equity ratio of just 0.36, indicating a financially disciplined operator generating strong returns without excessive leverage. Gross margins of 46.3 percent and revenue growth of 9.6 percent year-over-year show the business is expanding efficiently, and the current ratio of 1.54 signals no near-term cash flow stress.", "bear_case": "Oil and gas earnings are cyclically elevated right now, and if crude prices retreat from current levels, reported profits could compress sharply despite no change in business quality. Valuation appears fairly priced at 1.9x book value and 2.4x sales once you account for capital intensity in the business, leaving limited margin of safety. A broader economic slowdown or recession would directly hit energy demand and crude prices, potentially dragging the stock lower even if the company executes perfectly.", "score_composite": 0.541, "scores": {"value": 0.86, "momentum": 0.747, "quality": 0.469, "sentiment": 0.389, "catalyst": 0.473}, "analyst": {"strong_buy": 7, "buy": 16, "hold": 8, "sell": 0, "strong_sell": 0, "total": 31}}, {"rank": 8, "ticker": "MU", "name": "Micron Technology Inc", "sector": "Technology", "is_featured": false, "price": 956.08, "day_chg": 2.43, "pe_ttm": 21.53, "pb": 10.34, "roe": 70.55, "net_margin": 72.57, "rev_growth": 166.98, "w52_pos": 0.737, "w52_high": 1255.0, "w52_low": 117.3, "mean_target": 1474.53, "upside_pct": 54.2, "has_earnings": true, "risk_tag": "Speculative", "thesis": "Micron has delivered extraordinary returns and operating leverage at 21.5x trailing earnings, but the momentum has stalled badly. With analyst sentiment deteriorating over three months and the stock up over 700 percent in the past year, this is a moment to ask whether the upside justifies the risks.", "bull_case": "Memory chip demand remains robust as AI server buildouts accelerate and the installed base of high-bandwidth memory expands. At 54 percent upside to the analyst mean target of 1474.53 dollars, there is material reward if the company sustains current margins and growth, and 53 of 58 analysts still rate the stock buy or better.", "bear_case": "First, Micron's operating margin of 65.6 percent sits 6.8 times its 5-year historical average of 9.7 percent, signaling that current earnings power is cyclical and likely unsustainable. Second, at 21.5x trailing earnings and 12.0x sales, the valuation already embeds strong forward guidance. Third, a broader slowdown in capex spending or a correction in AI-driven demand could trigger sharp multiple compression, particularly if the memory market turns as it has cyclically in the past.", "score_composite": 0.533, "scores": {"value": 0.236, "momentum": 0.993, "quality": 0.733, "sentiment": 0.648, "catalyst": 0.665}, "analyst": {"strong_buy": 18, "buy": 35, "hold": 4, "sell": 1, "strong_sell": 0, "total": 58}}, {"rank": 9, "ticker": "USB", "name": "US Bancorp", "sector": "Financials", "is_featured": false, "price": 62.77, "day_chg": 2.55, "pe_ttm": 12.35, "pb": 1.4, "roe": 12.48, "net_margin": null, "rev_growth": 84.12, "w52_pos": 0.843, "w52_high": 66.08, "w52_low": 45.02, "mean_target": 70.91, "upside_pct": 13.0, "has_earnings": true, "risk_tag": "Value", "thesis": "US Bancorp trades at 12.4 times trailing earnings with 13 percent upside to analyst targets, but its 84 percent revenue growth figure appears anomalous for a mature regional bank and warrants scrutiny before initiating a position.", "bull_case": "The stock has already gained 27.4 percent over the past 12 months excluding the most recent month, and 16 of 27 analysts rate it buy or strong buy, suggesting institutional conviction. At 1.4 times book value with a 12.5 percent return on equity, the valuation remains reasonable for a financials name with improving analyst consensus over the last three months.", "bear_case": "The headline 84 percent revenue growth appears inconsistent with typical bank operating environments and needs careful examination in the latest earnings report dated June 30, 2026, as elevated numbers may reflect one-time events or accounting changes rather than sustainable business momentum. Valuation compression is a real risk if the economy slows and net interest margin pressure returns, especially given the bank's 1.42 debt-to-equity ratio which provides limited financial flexibility. Additionally, interest rate direction remains the primary driver for regional bank returns, and any decline in rates could pressure net interest income and justify a retreat from the analyst target price of 70.91 dollars.", "score_composite": 0.532, "scores": {"value": 0.825, "momentum": 0.607, "quality": 0.353, "sentiment": 0.659, "catalyst": 0.481}, "analyst": {"strong_buy": 6, "buy": 10, "hold": 10, "sell": 1, "strong_sell": 0, "total": 27}}, {"rank": 10, "ticker": "UNH", "name": "UnitedHealth Group Inc", "sector": "Healthcare", "is_featured": false, "price": 399.66, "day_chg": 0.85, "pe_ttm": 25.63, "pb": 3.61, "roe": 14.4, "net_margin": null, "rev_growth": 6.46, "w52_pos": 0.699, "w52_high": 461.62, "w52_low": 255.97, "mean_target": 482.64, "upside_pct": 20.8, "has_earnings": false, "risk_tag": "Quality", "thesis": "UnitedHealth is up 27.2% over the past year and now trades at 25.6x trailing earnings with 34 of 35 recent analyst ratings at buy or stronger. The real question is whether the stock's 20.8% upside to the $482.64 mean target justifies holding here or if recent momentum has already priced in the good news.", "bull_case": "UnitedHealth generates strong returns on equity at 14.4% and maintains a lean capital structure with 0.70 debt to equity, giving it room to deploy capital for growth or shareholder returns even as the healthcare sector benefits from aging demographics and rising healthcare spending.", "bear_case": "First, execution risk is real in a complex insurance and healthcare services business where regulatory headwinds, medical cost inflation, and consumer behavior shifts can derail earnings growth that currently sits at just 6.5% year over year. Second, the valuation is stretched for a stock that has already rallied 27% and trades at 25.6x earnings, leaving little room for a disappointment or even just a pause in growth. Third, a broader economic slowdown or recession could pressure insurance enrollment volumes and healthcare utilization, and rising interest rates have already begun pressuring insurance valuations this year.", "score_composite": 0.527, "scores": {"value": 0.714, "momentum": 0.6, "quality": 0.36, "sentiment": 0.743, "catalyst": 0.491}, "analyst": {"strong_buy": 8, "buy": 19, "hold": 7, "sell": 0, "strong_sell": 0, "total": 34}}]};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let picks        = DATA.picks;
+let sectorFilter = "all";
+let sortKey      = 'score_composite';
+let sortAsc      = false;
+let selectedIdx  = null;
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const fmt  = (v, dp=2) => v != null ? Number(v).toFixed(dp) : '—';
+const fmtP = (v)       => v != null ? (v >= 0 ? '+' : '') + Number(v).toFixed(1) + '%' : '—';
+const fmtD = (v)       => v != null ? '$' + Number(v).toFixed(2) : '—';
+const clamp = (v,mn,mx)=> Math.min(mx, Math.max(mn, v));
+
+function riskClass(tag) {
+  const map = { Growth:'risk-Growth', Value:'risk-Value', Quality:'risk-Quality',
+                Speculative:'risk-Speculative', Turnaround:'risk-Turnaround' };
+  return map[tag] || 'risk-default';
+}
+
+// ── Render Hero ─────────────────────────────────────────────────────────────
+function renderHero(p) {
+  document.getElementById('h-ticker').textContent  = p.ticker;
+  document.getElementById('h-name').textContent    = p.name;
+  document.getElementById('h-price').textContent   = fmtD(p.price);
+  document.getElementById('week-label').textContent = DATA.week_label;
+  document.getElementById('gen-date').textContent   = DATA.generated_at;
+
+  document.getElementById('h-target').textContent = p.mean_target ? fmtD(p.mean_target) : '—';
+  document.getElementById('h-upside').textContent = p.upside_pct != null ? fmtP(p.upside_pct) : '—';
+
+  document.getElementById('h-thesis').textContent = p.thesis || 'Analysis pending.';
+
+  const riskEl = document.getElementById('h-risk');
+  riskEl.textContent  = p.risk_tag || '—';
+  riskEl.className    = 'risk-pill ' + riskClass(p.risk_tag);
+
+  // Analyst bar
+  const a = p.analyst;
+  const t = a.total || 1;
+  document.getElementById('analyst-bar').innerHTML = `
+    <div class="ab-sb" style="width:${a.strong_buy/t*100}%"></div>
+    <div class="ab-b"  style="width:${a.buy/t*100}%"></div>
+    <div class="ab-h"  style="width:${a.hold/t*100}%"></div>
+    <div class="ab-s"  style="width:${a.sell/t*100}%"></div>
+    <div class="ab-ss" style="width:${a.strong_sell/t*100}%"></div>`;
+  document.getElementById('analyst-legend').innerHTML = [
+    ['#1a6b3a','Strong Buy',a.strong_buy],
+    ['#3a9a5a','Buy',a.buy],
+    ['#c8c020','Hold',a.hold],
+    ['#d06020','Sell',a.sell],
+    ['#b52525','Strong Sell',a.strong_sell],
+  ].map(([c,l,n]) => `<span class="al-item"><span class="al-dot" style="background:${c}"></span>${l} ${n}</span>`).join('');
+
+  // 52w range
+  const pct = p.w52_pos != null ? Math.round(p.w52_pos * 100) : 50;
+  document.getElementById('w52-fill').style.width   = pct + '%';
+  document.getElementById('w52-marker').style.left  = pct + '%';
+  document.getElementById('w52-low').textContent    = fmtD(p.w52_low);
+  document.getElementById('w52-high').textContent   = fmtD(p.w52_high);
+  document.getElementById('w52-cur').textContent    = fmtD(p.price);
+
+  // Bull / Bear
+  document.getElementById('case-grid').innerHTML = `
+    <div class="case-card bull-card">
+      <div class="case-label bull-label">▲ Bull Case</div>
+      <div>${p.bull_case || '—'}</div>
+    </div>
+    <div class="case-card bear-card">
+      <div class="case-label bear-label">▼ Bear Case</div>
+      <div>${p.bear_case || '—'}</div>
+    </div>`;
+}
+
+// ── Render Watchlist ────────────────────────────────────────────────────────
+function renderTable() {
+  const filtered = sectorFilter === "all"
+    ? picks
+    : picks.filter(p => (p.sector || "Other") === sectorFilter);
+  const sorted = [...filtered].sort((a,b) => {
+    const av = a[sortKey] ?? -Infinity;
+    const bv = b[sortKey] ?? -Infinity;
+    return sortAsc ? av - bv : bv - av;
+  });
+
+  const scoreKeys = ['value','momentum','quality','sentiment','catalyst'];
+  const maxH = 20;
+
+  const rows = sorted.map((p, i) => {
+    const mini = scoreKeys.map(k => {
+      const h = Math.round(clamp(p.scores[k], 0, 1) * maxH);
+      return `<div class="mini-bar" style="height:${maxH}px">
+                <div class="mini-fill" style="height:${h}px"></div>
+              </div>`;
+    }).join('');
+
+    const compColor = p.score_composite >= 0.65 ? 'var(--green)'
+                    : p.score_composite >= 0.55 ? 'var(--accent2)'
+                    : 'var(--ink3)';
+
+    return `<tr class="${p.is_featured ? 'featured-row':''} ${selectedIdx===i?'selected':''}"
+               data-idx="${i}" onclick="selectRow(${i}, sorted_${i})">
+      <td style="color:var(--ink3);font-family:var(--mono);font-size:11px">${p.rank}</td>
+      <td>
+        <div class="ticker-cell">
+          <div>
+            <div class="ticker-sym">${p.ticker}${p.is_featured ? ' <span class="featured-star">★</span>':''}</div>
+            <div class="ticker-name">${p.name.length > 28 ? p.name.slice(0,28)+'…' : p.name}</div>
+          </div>
+          ${p.has_earnings ? '<span class="earnings-badge">Earnings</span>' : ''}
+        </div>
+      </td>
+      <td><span class="sector-pill">${p.sector || '—'}</span></td>
+      <td class="price-cell">${fmtD(p.price)}</td>
+      <td class="price-cell" style="color:var(--ink3)">${fmtD(p.mean_target)}</td>
+      <td class="upside-cell">${p.upside_pct != null ? fmtP(p.upside_pct) : '—'}</td>
+      <td style="font-family:var(--mono);font-size:12px">${p.pe_ttm != null ? fmt(p.pe_ttm,1)+'x' : '—'}</td>
+      <td style="font-family:var(--mono);font-size:12px">${p.roe != null ? fmt(p.roe,1)+'%' : '—'}</td>
+      <td style="font-family:var(--mono);font-size:12px">${p.rev_growth != null ? fmtP(p.rev_growth) : '—'}</td>
+      <td><div class="mini-score">${mini}</div></td>
+      <td class="composite-cell" style="color:${compColor}">${fmt(p.score_composite,3)}</td>
+      <td><span class="risk-pill-light">${p.risk_tag || '—'}</span></td>
+    </tr>`;
+  });
+
+  // inject sorted picks as scoped variable via data-idx mapping
+  window._sortedPicks = sorted;
+  window._filteredPicks = filtered;
+  document.getElementById('watchlist-body').innerHTML = rows.join('');
+
+  // bind clicks after render
+  document.querySelectorAll('#watchlist-body tr').forEach((tr, i) => {
+    tr.addEventListener('click', () => selectRow(i, window._sortedPicks));
+  });
+}
+
+// ── Select row → update hero ────────────────────────────────────────────────
+function selectRow(i, sortedArr) {
+  const arr = sortedArr || window._sortedPicks;
+  const p   = arr[i];
+
+  selectedIdx = i;
+  renderTable();
+
+  // Flash the hero left panel to signal the update
+  const heroLeft = document.querySelector('.hero-left');
+  heroLeft.style.transition = 'opacity 0.15s';
+  heroLeft.style.opacity = '0';
+  setTimeout(() => {
+    renderHero(p);
+    // Update eyebrow — show "Featured Pick" only if it's the featured one
+    // Update sector label in masthead
+  const sectorBadge = document.getElementById('hero-sector');
+  if (sectorBadge) sectorBadge.textContent = p.sector || '';
+  document.getElementById('hero-eyebrow').textContent =
+      p.is_featured ? '★ Featured Pick' : '★ Viewing Pick #' + p.rank;
+    heroLeft.style.opacity = '1';
+  }, 150);
+
+  // Scroll to top so hero is visible
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Sort ─────────────────────────────────────────────────────────────────────
+function sortTable(key) {
+  if (sortKey === key) { sortAsc = !sortAsc; }
+  else { sortKey = key; sortAsc = false; }
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  selectedIdx = null;
+  renderTable();
+}
+
+// ── Sector filter ────────────────────────────────────────────────────────────
+function filterSector(val) {
+  sectorFilter = val;
+  selectedIdx  = null;
+  renderTable();
+}
+
+function populateSectorDropdown() {
+  const sectors = [...new Set(picks.map(p => p.sector || "Other"))].sort();
+  const sel = document.getElementById('sector-filter');
+  sectors.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+populateSectorDropdown();
+const featured = picks.find(p => p.is_featured) || picks[0];
+renderHero(featured);
+renderTable();
+</script>
+</body>
+</html>
