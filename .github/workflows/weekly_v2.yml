@@ -1,0 +1,48 @@
+name: Weekly Stock Screener v2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-screener-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run screener v2
+        env:
+          FINNHUB_API_KEY:   ${{ secrets.FINNHUB_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python screener_v2.py
+
+      - name: Commit and push page and archive
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p /tmp/v2out/data
+          cp docs/index.html /tmp/v2out/index.html
+          cp -r data/. /tmp/v2out/data/ 2>/dev/null || true
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p docs data
+          cp /tmp/v2out/index.html docs/index.html
+          cp -r /tmp/v2out/data/. data/ 2>/dev/null || true
+          git add docs/index.html data
+          git diff --staged --quiet || git commit -m "v2 update: $(date +'%Y-%m-%d')"
+          git push
