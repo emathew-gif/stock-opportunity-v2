@@ -20,6 +20,8 @@ WHAT DIFFERS FROM v1  (see Methodology_v2_Changes.docx)
     - cross-sectional percentile rank instead of min-max scaling
     - composite = 0.80 * weighted mean + 0.20 * worst sub-score
     - cyclical guard: value score scaled down when TTM margin >> 5y margin
+    - stale-reference guard: upside discarded when price sits outside its own
+      52-week range (stock-split signature)
   value      yields not multiples (negatives rank worst); pbQuarterly not pbAnnual;
              adds sales yield and EBITDA/EV
   momentum   12-1 price return (was: mid-range 52w position, which penalised winners)
@@ -269,20 +271,34 @@ def parse(ticker):
     rmtd = gm(m, "monthToDatePriceReturnDaily")
     mom_12_1 = (r52 - rmtd) if (r52 is not None and rmtd is not None) else r52
 
+    # ── 52-week range, and a data-sanity check on it ─────────────────────────
+    w52_high, w52_low = gm(m, "52WeekHigh"), gm(m, "52WeekLow")
+    w52_pos = ((price - w52_low) / (w52_high - w52_low)
+               if (w52_high and w52_low and price and w52_high != w52_low) else None)
+
+    # If the current price sits OUTSIDE its own 52-week range the reference data
+    # is internally inconsistent. The usual cause is a stock split: the quote
+    # updates immediately but the 52-week range and the analyst target stay on
+    # the pre-split basis, which manufactures a huge fake "upside".
+    # Observed 2026-09-04: APH priced at $82.07 against a 52-week low of $108.68
+    # and a target of $201.17, producing a fabricated 145% upside on what is
+    # really about 23%. Discard the figure rather than publish or score it.
+    stale_ref = bool(w52_high and w52_low and price and
+                     (price < w52_low * 0.999 or price > w52_high * 1.001))
+
     # ── Sentiment: level AND 3-month revision ────────────────────────────────
     now_score, buy_ratio, sb, b, h, s, ss, total = consensus(rec[0] if len(rec) > 0 else None)
     old_score = consensus(rec[2])[0] if len(rec) > 2 else None
     rev_3m    = (now_score - old_score) if (now_score is not None and old_score is not None) else None
 
     mean_target = tgt.get("targetMean")
-    upside_pct  = round((mean_target - price) / price * 100, 1) if mean_target and price else None
+    upside_pct  = (round((mean_target - price) / price * 100, 1)
+                   if (mean_target and price and not stale_ref) else None)
+    if stale_ref:
+        mean_target = None          # the target is on the same stale basis
 
     # ── Catalyst: realised surprise, not a forward date ──────────────────────
     sue, pead_decay, last_report = sue_and_decay(d.get("surprise"))
-
-    w52_high, w52_low = gm(m, "52WeekHigh"), gm(m, "52WeekLow")
-    w52_pos = ((price - w52_low) / (w52_high - w52_low)
-               if (w52_high and w52_low and price and w52_high != w52_low) else None)
 
     row    = df_holdings[df_holdings["Ticker"] == ticker]
     sector = row["sector"].values[0] if len(row) > 0 else "Other"
@@ -299,6 +315,7 @@ def parse(ticker):
         "debt_equity": debt_eq, "current_ratio": curr_ratio,
         "rev_growth": gm(m, "revenueGrowthTTMYoy"), "eps_growth": gm(m, "epsGrowthTTMYoy"),
         "w52_high": w52_high, "w52_low": w52_low, "w52_pos": w52_pos,
+        "stale_ref": stale_ref,
         "mom_12_1": mom_12_1,
         "mean_target": mean_target, "upside_pct": upside_pct,
         "analyst_score": now_score, "analyst_score_3m_ago": old_score,
@@ -373,6 +390,10 @@ print("✓ Scoring complete")
 print(f"\n  cyclical guard triggered on {(df['cyc_guard'] < 1.0).sum()} names")
 print(f"  3-month revision available for {df['revision_3m'].notna().sum()} names")
 print(f"  earnings surprise available for {df['sue'].notna().sum()} names")
+_stale = df["stale_ref"].sum()
+if _stale:
+    print(f"  ⚠ upside suppressed on {_stale} name(s) with stale reference data "
+          f"(price outside its own 52-week range): {df[df['stale_ref']]['ticker'].tolist()}")
 print(f"\nTop 10:")
 print(df.head(10)[["rank","ticker","sector","score_composite","worst_lens"] + SUB]
         .round(3).to_string(index=False))
@@ -411,6 +432,9 @@ def build_prompt(row):
         cyc = (f"\nNOTE: operating margin is {row['margin_ratio']:.1f}x its 5-year average "
                f"({pct(row['op_margin_ttm'])} vs {pct(row['op_margin_5y'])}) — earnings may be "
                f"at a cyclical peak, so trailing valuation multiples flatter it.")
+    if row.get("stale_ref"):
+        cyc += ("\nNOTE: analyst target data for this name is stale (likely a recent stock "
+                "split), so no upside figure is available. Do not mention price targets.")
     rev = ("improving" if (pd.notna(row["revision_3m"]) and row["revision_3m"] > 0)
            else "deteriorating" if (pd.notna(row["revision_3m"]) and row["revision_3m"] < 0)
            else "unchanged")
