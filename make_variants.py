@@ -6,8 +6,8 @@ screener_v2.py writes docs/index.html. This reads it back, then publishes three
 views of the same ranking so they can be compared side by side:
 
   docs/index.html       Baseline      featured pick = rank 1, as scored
-  docs/featured.html    Upside >= 15% featured pick = best-ranked name that also
-                                      clears the upside floor
+  docs/featured.html    Upside >= 15% hero AND watchlist filtered to names clearing
+                                      the upside floor
   docs/conviction.html  Conviction    same featured rule, and the two forecast-based
                                       hero metrics are replaced with realised ones:
                                       12-month return, and analyst buy count
@@ -94,6 +94,15 @@ def build(template, data, key):
         for p in picks:
             p["is_featured"] = (p["rank"] == keep)
 
+    if key == "floor":
+        # The tab says "Upside >= 15%", so the watchlist must honour it too --
+        # not just the hero. Ranks stay as scored, so the list may read 3,4,5,7,10.
+        # If nothing clears the floor, keep all ten rather than publish a blank page.
+        elig = [p for p in picks
+                if p.get("upside_pct") is not None and p["upside_pct"] >= UPSIDE_FLOOR]
+        if elig:
+            d["picks"] = elig
+
     if key == "conviction":
         d["week_label"] = d["week_label"] + " · conviction view"
 
@@ -135,8 +144,8 @@ def main():
             f.write(html)
         d2 = json.loads(re.search(r'const DATA = (\{.*?\});\s*\n', html, re.DOTALL).group(1))
         feat = [p for p in d2["picks"] if p["is_featured"]][0]
-        print(f"  {out:<24} {label:<14} featured: {feat['ticker']:<6} "
-              f"rank {feat['rank']:<3} upside {feat.get('upside_pct')}%")
+        print(f"  {out:<24} {label:<14} {len(d2['picks']):>2} rows  featured: "
+              f"{feat['ticker']:<6} rank {feat['rank']:<3} upside {feat.get('upside_pct')}%")
     print("\nRanking is identical across all three - only the hero panel differs.")
 
 if __name__ == "__main__":
