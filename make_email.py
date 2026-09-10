@@ -2,8 +2,11 @@
 """
 Client emailer — runs AFTER screener_v2.py, changes no scoring.
 
-Writes docs/email.html: a self-contained, email-safe rendering of the week's
-featured pick. Separate file from the web pages, which are unchanged.
+Writes two email-safe renderings of the week's featured pick:
+  docs/email.html       the five factors stacked as rows
+  docs/email-wide.html  the five factors laid out as columns
+
+The web pages are unchanged.
 
 WHY A SEPARATE FILE
 The web pages are a JavaScript app -- renderHero(), renderTable(), a DATA blob.
@@ -18,6 +21,7 @@ import json, re, glob, csv, os, html
 
 PAGE   = "docs/index.html"
 OUT    = "docs/email.html"
+OUT_H  = "docs/email-wide.html"   # same content, buckets laid out horizontally
 
 INK, INK2, INK3 = "#0a0a0a", "#3a3a3a", "#7a7a7a"
 PAPER, PAPER2, RULE = "#f5f2eb", "#ede9e0", "#ded8cc"
@@ -73,10 +77,23 @@ def bar(score, filled_colour=INK):
     return (f'<table role="presentation" cellpadding="0" cellspacing="0" border="0">'
             f'<tr>{cells}</tr></table>')
 
+def vbar(score, filled_colour=INK, rows=10):
+    """Vertical bar for the horizontal layout: stacked table rows filled from the
+    bottom. Same bgcolor trick, so it survives images-off."""
+    n = 0 if score is None else max(0, min(rows, int(round(score * rows))))
+    cells = ""
+    for i in range(rows):
+        c = filled_colour if (rows - i) <= n else PAPER2
+        cells += (f'<tr><td width="30" height="7" bgcolor="{c}" '
+                  f'style="font-size:0;line-height:0;">&nbsp;</td></tr>'
+                  f'<tr><td height="2" style="font-size:0;line-height:0;">&nbsp;</td></tr>')
+    return (f'<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+            f'align="center">{cells}</table>')
+
 def esc(s):
     return html.escape(str(s or "").strip())
 
-def build(data, universe):
+def build(data, universe, layout="stacked"):
     picks = data["picks"]
     feat  = next((p for p in picks if p.get("is_featured")), picks[0])
     tk    = feat["ticker"]
@@ -89,21 +106,29 @@ def build(data, universe):
         mine = feat["scores"].get(key)
         pct[key] = (sum(1 for v in vals if v < mine) / len(vals)) if (vals and mine is not None) else None
 
-    # the funnel — how many names clear how many lenses, at the median bar
     keys = [k for k, *_ in BUCKETS]
-    counts = {}
-    for r in universe:
-        try:
-            n = sum(1 for k in keys if float(r[f"score_{k}"]) > 0.50)
-        except (TypeError, ValueError, KeyError):
-            continue
-        counts[n] = counts.get(n, 0) + 1
     total = len(universe)
-    clears = {k: sum(v for n, v in counts.items() if n >= k) for k in range(1, 6)}
     cleared_by_feat = sum(1 for k in keys if (feat["scores"].get(k) or 0) > 0.50)
 
     rows = ""
-    for key, label, sub, wt in BUCKETS:
+    if layout == "horizontal":
+        # Five columns side by side: label above, vertical bar, position below,
+        # then one line explaining all five.
+        head = bars = foot = ""
+        for key, label, sub, wt in BUCKETS:
+            head += (f'<td width="20%" align="center" valign="bottom" '
+                     f'style="font:600 12px Helvetica,Arial,sans-serif;color:{INK};padding-bottom:6px;">'
+                     f'{label}<br><span style="font:400 10px Helvetica,Arial,sans-serif;color:{INK3};">{wt}</span></td>')
+            bars += f'<td width="20%" align="center" valign="bottom">{vbar(pct[key])}</td>'
+            foot += (f'<td width="20%" align="center" valign="top" '
+                     f'style="font:400 11px Helvetica,Arial,sans-serif;color:{INK2};padding-top:8px;">'
+                     f'{band(pct[key])}</td>')
+        note = ' &nbsp;·&nbsp; '.join(f'<b style="color:{INK2};">{l}</b> {sb.lower()}'
+                                      for _, l, sb, _ in BUCKETS)
+        rows = (f'<tr>{head}</tr><tr>{bars}</tr><tr>{foot}</tr>'
+                f'<tr><td colspan="5" style="font:400 10px/1.5 Helvetica,Arial,sans-serif;'
+                f'color:{INK3};padding-top:14px;text-align:center;">{note}</td></tr>')
+    for key, label, sub, wt in (BUCKETS if layout != "horizontal" else []):
         # Bar AND label both read from the percentile, so they always agree.
         # The raw sub-score is a weighted blend of percentile ranks and is not
         # itself uniform, so using it for the bar and the percentile for the
@@ -188,18 +213,6 @@ def build(data, universe):
     </table>
   </td></tr>
 
-  <tr><td style="padding:22px 28px 0 28px;">
-    <div style="font:400 10px Helvetica,Arial,sans-serif;color:{INK3};letter-spacing:.14em;text-transform:uppercase;padding-bottom:7px;">How we got here</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="font:400 12px Helvetica,Arial,sans-serif;color:{INK2};">
-      <tr><td style="padding:3px 0;">{total} companies screened</td><td align="right">{total}</td></tr>
-      <tr><td style="padding:3px 0;">clear 3 of 5 measures</td><td align="right">{clears[3]}</td></tr>
-      <tr><td style="padding:3px 0;">clear 4 of 5 measures</td><td align="right">{clears[4]}</td></tr>
-      <tr><td style="padding:3px 0;font-weight:600;color:{INK};">clear all 5</td>
-          <td align="right" style="font-weight:600;color:{INK};">{clears[5]}</td></tr>
-    </table>
-  </td></tr>
-
   <tr><td style="padding:20px 28px 24px 28px;">
     <div style="border-top:1px solid {RULE};padding-top:12px;font:400 10px/1.5 Helvetica,Arial,sans-serif;color:{INK3};">
       Measures are percentile ranks across the {esc(data.get('universe'))} universe, refreshed weekly.
@@ -222,12 +235,14 @@ def main():
     data = json.loads(m.group(1))
     universe = load_universe()
     os.makedirs("docs", exist_ok=True)
-    with open(OUT, "w") as f:
-        f.write(build(data, universe))
+    for path, layout in ((OUT, "stacked"), (OUT_H, "horizontal")):
+        with open(path, "w") as f:
+            f.write(build(data, universe, layout))
     feat = next((p for p in data["picks"] if p.get("is_featured")), data["picks"][0])
     print("=" * 60); print("Client emailer"); print("=" * 60)
-    print(f"  {OUT}  featured {feat['ticker']} (rank {feat['rank']}) "
-          f"from {len(universe)} scored names")
+    print(f"  featured {feat['ticker']} (rank {feat['rank']}) from {len(universe)} scored names")
+    print(f"  {OUT:<22} buckets stacked vertically")
+    print(f"  {OUT_H:<22} buckets laid out horizontally")
 
 if __name__ == "__main__":
     main()
