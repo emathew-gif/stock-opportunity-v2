@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Opportunity of the Week</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:      #0a0a0a;
+    --ink2:     #3a3a3a;
+    --ink3:     #7a7a7a;
+    --paper:    #f5f2eb;
+    --paper2:   #ede9e0;
+    --paper3:   #e4dfd3;
+    --accent:   #c8410a;
+    --accent2:  #1a3a5c;
+    --green:    #1a6b3a;
+    --red:      #b52525;
+    --gold:     #b07d2a;
+    --border:   rgba(10,10,10,0.12);
+    --serif:    'DM Serif Display', Georgia, serif;
+    --sans:     'Instrument Sans', sans-serif;
+    --mono:     'DM Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    min-height: 56px;
+  }
+  .masthead-left {
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .masthead-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .masthead-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.1;
+  }
+  .masthead-right {
+    display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;
+  }
+  .week-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink3);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 420px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-left {
+    padding: 3rem 2.5rem;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--ink);
+    color: var(--paper);
+    position: relative;
+  }
+  .hero-left::before {
+    content: '';
+    position: absolute;
+    top: 0; right: -60px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  .featured-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .featured-ticker {
+    font-family: var(--serif);
+    font-size: 80px;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    color: #fff;
+    margin-bottom: 0.25rem;
+  }
+  .featured-name {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 2rem;
+    font-weight: 400;
+  }
+  .key-metrics-row {
+    display: flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .key-metric {
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .key-metric-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+  }
+  .key-metric-value {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+  .key-metric-value.highlight {
+    color: #f5c842;
+  }
+  .key-metric-divider {
+    width: 1px;
+    background: rgba(255,255,255,0.12);
+    align-self: stretch;
+    margin: 2px 0;
+  }
+  .featured-thesis {
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.7);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 1.25rem;
+    margin-top: auto;
+  }
+  .risk-pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+  }
+  .risk-Growth     { background: rgba(26,58,92,0.4);  color: #7ab8f5; border: 1px solid rgba(122,184,245,0.3); }
+  .risk-Value      { background: rgba(176,125,42,0.3); color: #e8c97a; border: 1px solid rgba(232,201,122,0.3); }
+  .risk-Quality    { background: rgba(26,107,58,0.3);  color: #6eda9a; border: 1px solid rgba(110,218,154,0.3); }
+  .risk-Speculative{ background: rgba(200,65,10,0.3);  color: #f5a07a; border: 1px solid rgba(245,160,122,0.3); }
+  .risk-Turnaround { background: rgba(120,60,140,0.3); color: #d4a0f0; border: 1px solid rgba(212,160,240,0.3); }
+  .risk-default    { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.2); }
+
+  .hero-right {
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .hero-right-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 0.75rem;
+  }
+
+
+  /* Analyst bar */
+  .analyst-bar-wrap { margin-top: 0.25rem; }
+  .analyst-bar {
+    display: flex; height: 8px; border-radius: 2px; overflow: hidden; margin-bottom: 0.5rem;
+  }
+  .ab-sb  { background: #1a6b3a; }
+  .ab-b   { background: #3a9a5a; }
+  .ab-h   { background: #c8c020; }
+  .ab-s   { background: #d06020; }
+  .ab-ss  { background: #b52525; }
+  .analyst-legend {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+  }
+  .al-item { display: flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+  .al-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* 52w bar */
+  .week52-wrap { margin-top: 0.25rem; }
+  .week52-track { height: 6px; background: var(--paper3); border-radius: 3px; position: relative; margin-bottom: 0.5rem; }
+  .week52-fill  { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.8s cubic-bezier(.16,1,.3,1); }
+  .week52-marker {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 2px solid var(--paper);
+    transition: left 0.8s cubic-bezier(.16,1,.3,1);
+    margin-left: -5px;
+  }
+  .week52-labels { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+
+  /* Bull / Bear */
+  .case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .case-card {
+    padding: 0.875rem 1rem;
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .bull-card { background: rgba(26,107,58,0.06); border-left: 3px solid var(--green); color: var(--ink2); }
+  .bear-card { background: rgba(181,37,37,0.06);  border-left: 3px solid var(--red);   color: var(--ink2); }
+  .case-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.4rem; font-weight: 500; }
+  .bull-label { color: var(--green); }
+  .bear-label { color: var(--red); }
+
+  /* ── WATCHLIST ── */
+  .watchlist-section { padding: 2rem 2.5rem; }
+  .watchlist-header {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+    margin-bottom: 0;
+  }
+  .watchlist-title { font-family: var(--serif); font-size: 20px; }
+  .filter-row {
+    display: flex; gap: 0.5rem; align-items: center;
+  }
+  .filter-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink3);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .watchlist-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .watchlist-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  .watchlist-table th:hover { color: var(--ink); }
+  .watchlist-table th.sorted { color: var(--accent); }
+  .watchlist-table td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .watchlist-table tr { cursor: pointer; transition: background 0.1s; }
+  .watchlist-table tr:hover td { background: var(--paper2); }
+  .watchlist-table tr.selected td { background: var(--paper3); }
+  .watchlist-table tr.selected td:first-child { border-left: 3px solid var(--accent2); }
+  .watchlist-table tr.featured-row td:first-child { border-left: 3px solid var(--accent); }
+
+  .ticker-cell { display: flex; align-items: center; gap: 0.75rem; }
+  .ticker-sym  { font-family: var(--mono); font-weight: 500; font-size: 13px; }
+  .ticker-name { font-size: 11px; color: var(--ink3); }
+  .featured-star { color: var(--accent); font-size: 10px; margin-left: 2px; }
+
+  .price-cell { font-family: var(--mono); font-size: 13px; }
+  .chg-cell   { font-family: var(--mono); font-size: 12px; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+
+  .upside-cell { font-family: var(--mono); font-size: 12px; color: var(--accent2); font-weight: 500; }
+
+  .mini-score {
+    display: flex; gap: 2px; align-items: center;
+  }
+  .mini-bar {
+    width: 4px;
+    border-radius: 1px;
+    background: var(--paper3);
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-fill {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--accent2);
+    border-radius: 1px;
+  }
+
+  .composite-cell {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* risk pill in table (light bg version) */
+  .risk-pill-light {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--ink3);
+    background: var(--paper2);
+    white-space: nowrap;
+  }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    margin: 0 2.5rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: none;
+    animation: slideDown 0.2s ease;
+  }
+  .detail-panel.visible { display: block; }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+  .detail-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+  }
+  .detail-col {
+    padding: 1.5rem;
+    border-right: 1px solid var(--border);
+  }
+  .detail-col:last-child { border-right: none; }
+  .detail-col-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 1rem;
+  }
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .metric-item {}
+  .metric-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); margin-bottom: 2px; }
+  .metric-value { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--ink); }
+
+  .thesis-text { font-size: 12px; line-height: 1.65; color: var(--ink2); }
+  .no-thesis   { font-size: 12px; color: var(--ink3); font-style: italic; }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 1.25rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-left  { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+  .footer-right { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+  .disclaimer   { font-size: 10px; color: var(--ink3); max-width: 600px; line-height: 1.5; margin-top: 0.25rem; }
+
+  /* ── EARNINGS BADGE ── */
+  .earnings-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgba(176,125,42,0.15);
+    color: var(--gold);
+    border: 1px solid rgba(176,125,42,0.3);
+    white-space: nowrap;
+  }
+
+
+  /* Sector pill */
+  .sector-pill {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--accent2);
+    background: rgba(26,58,92,0.06);
+    white-space: nowrap;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { min-height: 320px; }
+    .detail-inner { grid-template-columns: 1fr; }
+    .detail-col { border-right: none; border-bottom: 1px solid var(--border); }
+    .detail-col:last-child { border-bottom: none; }
+    .case-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-left">
+    <span class="masthead-label">Broad Market</span>
+    <span class="masthead-label">SPY Top 150</span>
+    <span class="masthead-label" id="hero-sector"></span>
+  </div>
+  <div class="masthead-title">Stock Opportunity<br><em>of the Week</em></div>
+  <div class="masthead-right"><a href="./index.html" class="masthead-label" style="text-decoration:none;">Baseline</a><a href="./featured.html" class="masthead-label" style="text-decoration:none;">Upside ≥ 15%</a><a href="./conviction.html" class="masthead-label" style="text-decoration:none;">Conviction</a><a href="./sector.html" class="masthead-label" style="text-decoration:none;background:var(--ink);color:var(--paper);border-color:var(--ink);">By Sector</a>
+    <span class="week-badge" id="week-label">—</span>
+  </div>
+</header>
+
+<!-- HERO: featured pick -->
+<section class="hero" id="hero-section">
+  <div class="hero-left">
+    <div>
+      <div class="featured-eyebrow" id="hero-eyebrow">&#9733; Featured Pick</div>
+      <div class="featured-ticker" id="h-ticker">—</div>
+      <div class="featured-name"   id="h-name">—</div>
+      <span class="risk-pill risk-default" id="h-risk">—</span>
+    </div>
+    <div>
+      <div class="key-metrics-row">
+        <div class="key-metric">
+          <span class="key-metric-label">Current Price</span>
+          <span class="key-metric-value" id="h-price">—</span>
+        </div>
+        <div class="key-metric-divider"></div>
+        <div class="key-metric">
+          <span class="key-metric-label">Avg. Analyst Target</span>
+          <span class="key-metric-value highlight" id="h-target">—</span>
+        </div>
+        <div class="key-metric-divider"></div>
+        <div class="key-metric">
+          <span class="key-metric-label">Upside</span>
+          <span class="key-metric-value highlight" id="h-upside">—</span>
+        </div>
+      </div>
+      <div class="featured-thesis" id="h-thesis">—</div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div>
+      <div class="section-label">Analyst Consensus</div>
+      <div class="analyst-bar-wrap">
+        <div class="analyst-bar" id="analyst-bar"></div>
+        <div class="analyst-legend" id="analyst-legend"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">52-Week Range</div>
+      <div class="week52-wrap">
+        <div class="week52-track">
+          <div class="week52-fill" id="w52-fill" style="width:0%"></div>
+          <div class="week52-marker" id="w52-marker" style="left:0%"></div>
+        </div>
+        <div class="week52-labels">
+          <span id="w52-low">—</span>
+          <span id="w52-cur" style="color:var(--ink);font-weight:500">—</span>
+          <span id="w52-high">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-grid" id="case-grid"></div>
+  </div>
+</section>
+
+<!-- WATCHLIST -->
+<section class="watchlist-section">
+  <div class="watchlist-header">
+    <div class="watchlist-title">Watchlist</div>
+    <div class="filter-row" style="gap:1rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:0.4rem">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink3)">SECTOR</span>
+        <select id="sector-filter" onchange="filterSector(this.value)"
+          style="font-family:var(--mono);font-size:10px;padding:4px 8px;border:1px solid var(--border);
+                 background:var(--paper);color:var(--ink);border-radius:2px;cursor:pointer">
+          <option value="all">All Sectors</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.4rem">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink3)">SORT</span>
+        <button class="filter-btn active" onclick="sortTable('score_composite')">Score</button>
+        <button class="filter-btn" onclick="sortTable('upside_pct')">Upside</button>
+        <button class="filter-btn" onclick="sortTable('pe_ttm')">P/E</button>
+        <button class="filter-btn" onclick="sortTable('roe')">ROE</button>
+      </div>
+    </div>
+  </div>
+
+  <table class="watchlist-table" id="watchlist">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Stock</th>
+        <th>Sector</th>
+        <th>Price</th>
+                <th>Avg. Target</th>
+        <th>Upside</th>
+        <th>P/E</th>
+        <th>ROE</th>
+        <th>Rev Gr.</th>
+        <th>Scores</th>
+        <th>Composite</th>
+        <th>Risk</th>
+      </tr>
+    </thead>
+    <tbody id="watchlist-body"></tbody>
+  </table>
+</section>
+
+
+
+<footer class="footer">
+  <div class="footer-left">
+    <div>Generated <span id="gen-date">—</span> &nbsp;·&nbsp; Equal-weighted scoring &nbsp;·&nbsp; SPY Top 150</div>
+    <div class="disclaimer">For informational purposes only. Not financial advice. Past performance does not guarantee future results.</div>
+  </div>
+  <div class="footer-right">Stock Opportunity of the Week</div>
+</footer>
+
+<script>
+const DATA = {"generated_at": "2026-09-10", "week_label": "v2 \u00b7 Week of 10 Sep 2026 \u00b7 by sector", "sector": "Broad Market", "universe": "SPY Top 150 \u00b7 v2", "weights": {"value": 0.25, "momentum": 0.1, "quality": 0.3, "sentiment": 0.2, "catalyst": 0.15}, "neutralised": "Value and Quality ranked within sector", "picks": [{"rank": 1, "ticker": "NVDA", "name": "NVIDIA Corp", "sector": "Technology", "is_featured": true, "price": 223.67, "day_chg": -0.91, "pe_ttm": 28.07, "pb": 20.77, "roe": 110.11, "net_margin": 74.67, "rev_growth": 83.38, "w52_pos": 0.822, "w52_high": 236.54, "w52_low": 164.27, "mean_target": 319.56, "upside_pct": 42.9, "has_earnings": false, "risk_tag": "Growth", "thesis": "NVIDIA faces a classic conundrum: exceptional business fundamentals offset by lofty valuation expectations. At 28.1x trailing earnings and 17.9x sales, the stock has already captured substantial investor enthusiasm, and 68 of 69 analysts rate it buy or strong buy, leaving limited room for disappointment.", "bull_case": "NVIDIA's 83.4% revenue growth, 110.1% return on equity, and 74.7% gross margin demonstrate genuine competitive dominance in AI semiconductors that extends far beyond current market consensus. The company's 42.9% upside to analyst targets suggests meaningful room to run if it can sustain execution at scale.", "bear_case": "The stock has returned 31.9% over the past year excluding the last month, and analyst sentiment has only improved over the last three months, potentially marking peak bullish conviction. Earnings growth could decelerate as the immediate AI infrastructure wave matures, and current valuation assumes this exceptional performance continues indefinitely. Broader semiconductor cycle risks, geopolitical restrictions on chip exports, and potential economic slowdown could all pressure demand for data center GPUs.", "score_composite": 0.742, "scores": {"value": 0.618, "momentum": 0.653, "quality": 1.0, "sentiment": 0.794, "catalyst": 0.629}, "analyst": {"strong_buy": 24, "buy": 41, "hold": 3, "sell": 1, "strong_sell": 0, "total": 69}, "hero_alt_1": "+31.9%", "hero_alt_2": "65 of 69"}, {"rank": 3, "ticker": "FDX", "name": "FedEx Corp", "sector": "Industrials", "is_featured": false, "price": 309.19, "day_chg": -1.57, "pe_ttm": 16.63, "pb": 2.55, "roe": 15.11, "net_margin": 62.11, "rev_growth": 7.73, "w52_pos": 0.783, "w52_high": 345.37, "w52_low": 178.94, "mean_target": 358.53, "upside_pct": 16.0, "has_earnings": true, "risk_tag": "Quality", "thesis": "FedEx is trading at a healthy 16.6x trailing earnings with analyst consensus shifting toward buy, and the stock has momentum after a 77% run since last year. The company's 15% return on equity and 62% gross margins suggest operational strength, but valuation and cycle timing deserve scrutiny before adding here.", "bull_case": "FedEx's 7.7% year-over-year revenue growth combined with a 0.8x price-to-sales ratio and 16% analyst upside to the mean target of $358.53 suggests the market has not fully priced in the company's profitability recovery. With 24 of 30 analysts now rating the stock buy or strong buy and improving consensus over the last three months, institutional conviction is building around near-term earnings momentum.", "bear_case": "The stock's 77% rally in the past twelve months has already captured much of the earnings recovery story, and at 16.6x trailing earnings the valuation leaves little room for disappointment if growth stalls or margins compress. FedEx faces cyclical headwinds from any slowdown in package volumes and freight demand, and with a debt-to-equity ratio of 0.81 the company has limited cushion if rising interest rates pressure refinancing costs or the broader logistics sector weakens. Any miss on the next earnings report could reverse the recent sentiment shift quickly.", "score_composite": 0.675, "scores": {"value": 1.0, "momentum": 0.907, "quality": 1.0, "sentiment": 0.6, "catalyst": 0.207}, "analyst": {"strong_buy": 9, "buy": 15, "hold": 9, "sell": 2, "strong_sell": 0, "total": 35}, "hero_alt_1": "+77.3%", "hero_alt_2": "24 of 35"}, {"rank": 4, "ticker": "CVX", "name": "Chevron Corp", "sector": "Energy", "is_featured": false, "price": 213.81, "day_chg": 1.91, "pe_ttm": 20.43, "pb": 1.74, "roe": 10.98, "net_margin": 43.65, "rev_growth": 11.17, "w52_pos": 0.987, "w52_high": 214.71, "w52_low": 146.49, "mean_target": 221.03, "upside_pct": 3.4, "has_earnings": false, "risk_tag": "Value", "thesis": "Chevron offers modest upside with a fortress balance sheet in a business generating strong near-term cash returns, but the stock is pricing in a cyclical earnings peak and offers limited margin of safety at current levels.", "bull_case": "The company's 11.2 percent year-over-year revenue growth, 43.6 percent gross margin, and low 0.20 debt-to-equity ratio position it to sustain healthy cash generation even if oil prices moderate, while 25 of 30 analysts rate it buy or strong buy and consensus has been improving over the last three months.", "bear_case": "Energy earnings are cyclically elevated right now given commodity prices, and at 20.4x trailing earnings Chevron is not cheap for a sector that swings sharply with macro conditions. The stock has already returned 34.5 percent over the last 12 months excluding the most recent month, leaving limited room for disappointment before sentiment shifts. An economic slowdown or sustained lower oil prices would pressure both earnings and the energy sector broadly, while the 3.4 percent upside to analyst mean target of 221.03 dollars suggests the market has already priced in a constructive outlook.", "score_composite": 0.657, "scores": {"value": 0.667, "momentum": 0.687, "quality": 0.833, "sentiment": 0.588, "catalyst": 0.546}, "analyst": {"strong_buy": 7, "buy": 18, "hold": 4, "sell": 1, "strong_sell": 0, "total": 30}, "hero_alt_1": "+34.5%", "hero_alt_2": "25 of 30"}, {"rank": 12, "ticker": "BMY", "name": "Bristol-Myers Squibb Co", "sector": "Healthcare", "is_featured": false, "price": 64.41, "day_chg": -0.43, "pe_ttm": 14.17, "pb": 5.27, "roe": 46.76, "net_margin": 71.66, "rev_growth": 3.11, "w52_pos": 0.838, "w52_high": 68.64, "w52_low": 42.52, "mean_target": 67.63, "upside_pct": 5.0, "has_earnings": false, "risk_tag": "Quality", "thesis": "Bristol-Myers Squibb is trading at a reasonable 14.2x trailing earnings with 25 of 30 analysts recommending buy or strong buy, but elevated operating margins suggest current earnings may not be sustainable. The 5% upside to consensus targets leaves little margin for error if profitability normalizes.", "bull_case": "BMY's 46.8% return on equity and 71.7% gross margin demonstrate strong underlying business quality and pricing power in its drug portfolio. With operating margins running 1.9x their 5-year average at 25.5%, if the company can maintain even a portion of this elevated profitability while growing revenue, current valuation appears fair.", "bear_case": "The biggest risk is earnings disappointment when operating margins inevitably compress back toward the 13.6% historical average, which would meaningfully reduce per-share profitability and justify lower valuations. The stock has already returned 41.6% over the past year, and at 5% upside to analyst targets, most of the near-term catalyst appears priced in. BMY carries a high 1.93 debt-to-equity ratio, meaning margin compression would squeeze both earnings and financial flexibility in a slowing economy or rising rate environment.", "score_composite": 0.584, "scores": {"value": 0.667, "momentum": 0.76, "quality": 0.571, "sentiment": 0.484, "catalyst": 0.654}, "analyst": {"strong_buy": 7, "buy": 8, "hold": 18, "sell": 2, "strong_sell": 0, "total": 35}, "hero_alt_1": "+41.6%", "hero_alt_2": "15 of 35"}, {"rank": 18, "ticker": "GOOGL", "name": "Alphabet Inc", "sector": "Comm Services", "is_featured": false, "price": 330.65, "day_chg": -2.28, "pe_ttm": 16.57, "pb": 6.76, "roe": 50.84, "net_margin": 60.9, "rev_growth": 20.05, "w52_pos": 0.555, "w52_high": 408.61, "w52_low": 233.23, "mean_target": 429.65, "upside_pct": 29.9, "has_earnings": false, "risk_tag": "Quality", "thesis": "Alphabet is firing on all cylinders with 20% revenue growth, exceptional profitability metrics that rival the best operators in tech, and 63 of 70 analysts rating it a buy or strong buy. The stock has climbed 45% over the past year but still sits 30% below consensus targets, leaving room to run on fundamental strength.", "bull_case": "The company is printing cash with a 50.8% return on equity and 60.9% gross margins while growing revenue at 20% year-over-year, showing that scale and pricing power remain intact. Most recent earnings have moved analysts toward more bullish calls, suggesting they see durability in this growth rather than cyclical noise.", "bear_case": "Alphabet trades at 16.6 times trailing earnings with a price-to-sales ratio of 9.1x, which is not cheap by historical standards. There is execution risk around artificial intelligence monetization and new product adoption, and if the 20% revenue growth proves cyclically elevated and normalizes downward, a multiple contraction could offset further share gains. Broad economic slowdown or rising interest rates could pressure tech valuations more severely than the current 2.72x current ratio and conservative 0.15x debt-to-equity balance sheet would protect against.", "score_composite": 0.553, "scores": {"value": 0.318, "momentum": 0.797, "quality": 0.864, "sentiment": 0.866, "catalyst": 0.248}, "analyst": {"strong_buy": 20, "buy": 43, "hold": 7, "sell": 0, "strong_sell": 0, "total": 70}, "hero_alt_1": "+44.9%", "hero_alt_2": "63 of 70"}, {"rank": 20, "ticker": "LOW", "name": "Lowe's Companies Inc", "sector": "Cons Discretionary", "is_featured": false, "price": 198.6, "day_chg": -1.1, "pe_ttm": 16.78, "pb": 316.28, "roe": 264.53, "net_margin": 33.08, "rev_growth": 8.16, "w52_pos": -0.008, "w52_high": 293.06, "w52_low": 199.34, "mean_target": 326.48, "upside_pct": 29.4, "has_earnings": false, "risk_tag": "Value", "thesis": "Lowe's stock is down 24.5% over the past year yet trades at 16.8x trailing earnings with 29 of 41 analysts rating it buy or strong buy. The company is generating 264.5% return on equity while growing revenues 8.2% year-over-year, suggesting the selloff may have created a tactical entry point.", "bull_case": "Strong operational returns are undeniable. Lowe's is producing 264.5% ROE on a gross margin of 33.1%, and the 8.2% revenue growth shows demand for home improvement and repair remains resilient even as consumer confidence wavers. At 16.8x trailing earnings, the stock appears reasonably priced relative to its profit generation.", "bear_case": "First, home improvement spending is inherently cyclical and vulnerable to recession. A downturn in housing starts or consumer discretionary spending could sink earnings faster than current consensus expects. Second, that stratospheric 264.5% ROE raises red flags about capital structure distortion rather than genuine operational excellence, and a shift in consumer behavior could compress margins or force costly inventory adjustments. Third, the company carries a 52.23 debt-to-equity ratio paired with a current ratio of just 1.10, leaving limited financial flexibility if credit markets tighten or same-store sales disappoint.", "score_composite": 0.549, "scores": {"value": 1.0, "momentum": 0.067, "quality": 0.8, "sentiment": 0.473, "catalyst": 0.524}, "analyst": {"strong_buy": 11, "buy": 17, "hold": 12, "sell": 1, "strong_sell": 0, "total": 41}, "hero_alt_1": "-24.5%", "hero_alt_2": "28 of 41"}, {"rank": 21, "ticker": "BAC", "name": "Bank of America Corp", "sector": "Financials", "is_featured": false, "price": 62.67, "day_chg": 0.45, "pe_ttm": 13.06, "pb": 1.33, "roe": 11.13, "net_margin": 81.73, "rev_growth": 99.37, "w52_pos": 0.866, "w52_high": 65.22, "w52_low": 46.12, "mean_target": 68.92, "upside_pct": 10.0, "has_earnings": true, "risk_tag": "Value", "thesis": "Bank of America trades at a reasonable 13.1x trailing earnings with 10 percent upside to analyst targets, but the 99 percent year-over-year revenue growth masks structural concerns in banking profitability and capital efficiency that deserve closer inspection.", "bull_case": "The stock is up 25 percent over the past year and 23 of 30 analysts rate it buy or strong buy, suggesting broad conviction that recent momentum reflects genuine improvement in bank earnings power as net interest margins stabilize at higher rate levels. At just 1.3x book value with an 11.1 percent return on equity, BAC appears to offer modest value for a systemically important U.S. bank.", "bear_case": "The 99 percent revenue growth figure is misleading given it reflects mark-to-market accounting and investment gains typical of rising rate environments\u2014actual net interest income and core banking revenue growth are far more modest, and this tailwind may reverse if rate expectations shift. The current ratio of 0.16 is dangerously low even for a bank, and the 2.43 debt-to-equity ratio remains elevated relative to pre-pandemic norms, leaving limited cushion if loan losses accelerate. A cyclical slowdown in the economy or unexpected decline in net interest margins could quickly compress earnings and disappoint investors who have already pushed the stock up 25 percent.", "score_composite": 0.548, "scores": {"value": 0.727, "momentum": 0.593, "quality": 0.636, "sentiment": 0.406, "catalyst": 0.468}, "analyst": {"strong_buy": 6, "buy": 17, "hold": 6, "sell": 0, "strong_sell": 0, "total": 29}, "hero_alt_1": "+25.4%", "hero_alt_2": "23 of 29"}, {"rank": 22, "ticker": "NEE", "name": "Nextera Energy Inc", "sector": "Utilities", "is_featured": false, "price": 82.65, "day_chg": -1.41, "pe_ttm": 18.54, "pb": 3.2, "roe": 16.82, "net_margin": 45.97, "rev_growth": 10.82, "w52_pos": 0.454, "w52_high": 98.75, "w52_low": 69.24, "mean_target": 99.58, "upside_pct": 20.5, "has_earnings": false, "risk_tag": "Quality", "thesis": "NextEra Energy trades at 18.5 times trailing earnings with a 16.8 percent return on equity and a healthy 10.8 percent revenue growth rate. The analyst mean price target of $99.58 implies 20.5 percent upside, though sentiment on the stock has deteriorated over the last three months despite 18 of 27 analysts rating it buy or strong buy.", "bull_case": "NextEra's 46 percent gross margin and consistent double-digit revenue growth position it as one of the better-capitalized utility plays during a period of rising energy infrastructure demand. The 20.5 percent upside to consensus targets suggests meaningful room to run if the company executes on its growth pipeline.", "bear_case": "The stock has already returned 18.3 percent over the past 12 months excluding the last month, and analyst consensus has deteriorated recently, which may signal that near-term catalysts are already priced in or that conviction is waning among professional investors. NextEra carries a debt-to-equity ratio of 1.93 and a current ratio of only 0.53, leaving little room for maneuver if interest rates remain elevated or refinancing becomes expensive. A slowdown in renewable energy spending or a miss on earnings execution could quickly reverse sentiment given the valuation sits at a premium 3.2 times book value.", "score_composite": 0.546, "scores": {"value": 0.4, "momentum": 0.52, "quality": 1.0, "sentiment": 0.459, "catalyst": 0.347}, "analyst": {"strong_buy": 8, "buy": 10, "hold": 9, "sell": 1, "strong_sell": 0, "total": 28}, "hero_alt_1": "+18.3%", "hero_alt_2": "18 of 28"}, {"rank": 43, "ticker": "PM", "name": "Philip Morris International Inc", "sector": "Cons Staples", "is_featured": false, "price": 185.71, "day_chg": 0.53, "pe_ttm": 26.61, "pb": 1368.86, "roe": 575.44, "net_margin": 67.51, "rev_growth": 8.93, "w52_pos": 0.664, "w52_high": 207.76, "w52_low": 142.11, "mean_target": 204.6, "upside_pct": 10.2, "has_earnings": true, "risk_tag": "Quality", "thesis": "Philip Morris is trading at modest upside to analyst targets with 20 of 27 analysts calling it a buy or strong buy, but elevated valuations and deteriorating balance sheet metrics raise questions about whether the current 8.9 percent revenue growth justifies a 26.6x price-to-earnings multiple for a mature tobacco business.", "bull_case": "The company generated strong gross margins of 67.5 percent and delivered 8.9 percent revenue growth year over year, signaling pricing power and demand resilience in its smoke-free product transition. With 27 analysts covering the stock and 20 recommending buy or strong buy, there is consensus that Philip Morris can sustain earnings momentum, leaving a 10.2 percent cushion to the mean target of $204.60.", "bear_case": "First, Philip Morris faces execution risk on its shift toward reduced-risk products, which remain unprofitable in many geographies and could see adoption slower than management projects if consumer behavior shifts or regulation tightens. Second, the stock's valuation appears stretched on traditional metrics: at 26.6x trailing earnings it prices in sustained earnings power that may not materialize if tobacco volumes contract faster than smoke-free products can replace them, particularly given the company is already generating only $0.42 of gross profit per dollar of assets. Third, a near-term economic slowdown or shift in currency markets could pressure a company with a debt-to-equity ratio of 186 percent and a current ratio of 0.98, leaving limited financial flexibility.", "score_composite": 0.478, "scores": {"value": 0.125, "momentum": 0.473, "quality": 1.0, "sentiment": 0.582, "catalyst": 0.473}, "analyst": {"strong_buy": 9, "buy": 11, "hold": 7, "sell": 0, "strong_sell": 0, "total": 27}, "hero_alt_1": "+14.9%", "hero_alt_2": "20 of 27"}, {"rank": 52, "ticker": "FCX", "name": "Freeport-McMoRan Inc", "sector": "Materials", "is_featured": false, "price": 76.23, "day_chg": -0.51, "pe_ttm": 37.13, "pb": 4.5, "roe": 15.26, "net_margin": 27.06, "rev_growth": -24.23, "w52_pos": 0.911, "w52_high": 80.24, "w52_low": 35.15, "mean_target": 75.06, "upside_pct": -1.5, "has_earnings": true, "risk_tag": "Speculative", "thesis": "Freeport-McMoRan has recovered sharply on copper upside, but faces a critical reset on valuation and demand. At 37 times trailing earnings with no analyst upside and a weak revenue outlook, the risk-reward has flipped.", "bull_case": "Copper demand from AI infrastructure and renewable energy transition remains structural. If the company executes on growth projects and commodity prices hold, the 15.3% return on equity could expand, rewarding patient holders who ignore near-term cyclicality.", "bear_case": "Revenue fell 24.2% year over year while the stock gained 63% in the past year excluding the last month, suggesting the market has already priced copper cycle strength. The 37.1 times trailing earnings multiple is aggressive for a cyclical commodity producer facing demand uncertainty. If global growth slows or copper prices retreat, the stock has limited downside protection, and analysts see no upside from here at 75.06 per share.", "score_composite": 0.462, "scores": {"value": 0.526, "momentum": 0.867, "quality": 0.434, "sentiment": 0.324, "catalyst": 0.554}, "analyst": {"strong_buy": 5, "buy": 19, "hold": 5, "sell": 0, "strong_sell": 1, "total": 30}, "hero_alt_1": "+63.0%", "hero_alt_2": "24 of 30"}, {"rank": 94, "ticker": "AMT", "name": "American Tower Corp", "sector": "Real Estate", "is_featured": false, "price": 175.43, "day_chg": -0.17, "pe_ttm": 23.98, "pb": 20.49, "roe": 91.62, "net_margin": 73.77, "rev_growth": 6.65, "w52_pos": 0.393, "w52_high": 199.13, "w52_low": 160.06, "mean_target": 219.3, "upside_pct": 25.0, "has_earnings": false, "risk_tag": "Quality", "thesis": "American Tower offers meaningful upside to analyst targets with improving sentiment, but a heavy debt load and thin liquidity create execution risk that deserves caution before buying near all-time highs.", "bull_case": "Wall Street sees 25% upside to the $219.30 analyst target, and consensus has been improving steadily with 25 of 30 analysts rating it buy or strong buy. The 73.8% gross margin and 6.7% revenue growth signal a stable tower business with pricing power in a mobile-dependent economy.", "bear_case": "American Tower carries a debt-to-equity ratio of 10.0x, which is extremely high and leaves little room for error if interest rates remain elevated or tenant demand softens. The stock has already declined 9.3% over the past year excluding the last month, suggesting the market may have already priced in much of the recovery that Wall Street now expects. At 24x trailing earnings and a current ratio of only 0.35, the company has limited cash flexibility to weather operational hiccups or refinancing challenges in a higher-rate environment.", "score_composite": 0.403, "scores": {"value": 0.404, "momentum": 0.207, "quality": 0.343, "sentiment": 0.879, "catalyst": 0.346}, "analyst": {"strong_buy": 8, "buy": 17, "hold": 4, "sell": 0, "strong_sell": 0, "total": 29}, "hero_alt_1": "-9.3%", "hero_alt_2": "25 of 29"}], "sector_leaders": [{"rank": 1, "ticker": "NVDA", "name": "NVIDIA Corp", "sector": "Technology", "is_featured": true, "price": 223.67, "day_chg": -0.91, "pe_ttm": 28.07, "pb": 20.77, "roe": 110.11, "net_margin": 74.67, "rev_growth": 83.38, "w52_pos": 0.822, "w52_high": 236.54, "w52_low": 164.27, "mean_target": 319.56, "upside_pct": 42.9, "has_earnings": false, "risk_tag": "Growth", "thesis": "NVIDIA faces a classic conundrum: exceptional business fundamentals offset by lofty valuation expectations. At 28.1x trailing earnings and 17.9x sales, the stock has already captured substantial investor enthusiasm, and 68 of 69 analysts rate it buy or strong buy, leaving limited room for disappointment.", "bull_case": "NVIDIA's 83.4% revenue growth, 110.1% return on equity, and 74.7% gross margin demonstrate genuine competitive dominance in AI semiconductors that extends far beyond current market consensus. The company's 42.9% upside to analyst targets suggests meaningful room to run if it can sustain execution at scale.", "bear_case": "The stock has returned 31.9% over the past year excluding the last month, and analyst sentiment has only improved over the last three months, potentially marking peak bullish conviction. Earnings growth could decelerate as the immediate AI infrastructure wave matures, and current valuation assumes this exceptional performance continues indefinitely. Broader semiconductor cycle risks, geopolitical restrictions on chip exports, and potential economic slowdown could all pressure demand for data center GPUs.", "score_composite": 0.742, "scores": {"value": 0.618, "momentum": 0.653, "quality": 1.0, "sentiment": 0.794, "catalyst": 0.629}, "analyst": {"strong_buy": 24, "buy": 41, "hold": 3, "sell": 1, "strong_sell": 0, "total": 69}, "hero_alt_1": "+31.9%", "hero_alt_2": "65 of 69"}, {"rank": 3, "ticker": "FDX", "name": "FedEx Corp", "sector": "Industrials", "is_featured": false, "price": 309.19, "day_chg": -1.57, "pe_ttm": 16.63, "pb": 2.55, "roe": 15.11, "net_margin": 62.11, "rev_growth": 7.73, "w52_pos": 0.783, "w52_high": 345.37, "w52_low": 178.94, "mean_target": 358.53, "upside_pct": 16.0, "has_earnings": true, "risk_tag": "Quality", "thesis": "FedEx is trading at a healthy 16.6x trailing earnings with analyst consensus shifting toward buy, and the stock has momentum after a 77% run since last year. The company's 15% return on equity and 62% gross margins suggest operational strength, but valuation and cycle timing deserve scrutiny before adding here.", "bull_case": "FedEx's 7.7% year-over-year revenue growth combined with a 0.8x price-to-sales ratio and 16% analyst upside to the mean target of $358.53 suggests the market has not fully priced in the company's profitability recovery. With 24 of 30 analysts now rating the stock buy or strong buy and improving consensus over the last three months, institutional conviction is building around near-term earnings momentum.", "bear_case": "The stock's 77% rally in the past twelve months has already captured much of the earnings recovery story, and at 16.6x trailing earnings the valuation leaves little room for disappointment if growth stalls or margins compress. FedEx faces cyclical headwinds from any slowdown in package volumes and freight demand, and with a debt-to-equity ratio of 0.81 the company has limited cushion if rising interest rates pressure refinancing costs or the broader logistics sector weakens. Any miss on the next earnings report could reverse the recent sentiment shift quickly.", "score_composite": 0.675, "scores": {"value": 1.0, "momentum": 0.907, "quality": 1.0, "sentiment": 0.6, "catalyst": 0.207}, "analyst": {"strong_buy": 9, "buy": 15, "hold": 9, "sell": 2, "strong_sell": 0, "total": 35}, "hero_alt_1": "+77.3%", "hero_alt_2": "24 of 35"}, {"rank": 4, "ticker": "CVX", "name": "Chevron Corp", "sector": "Energy", "is_featured": false, "price": 213.81, "day_chg": 1.91, "pe_ttm": 20.43, "pb": 1.74, "roe": 10.98, "net_margin": 43.65, "rev_growth": 11.17, "w52_pos": 0.987, "w52_high": 214.71, "w52_low": 146.49, "mean_target": 221.03, "upside_pct": 3.4, "has_earnings": false, "risk_tag": "Value", "thesis": "Chevron offers modest upside with a fortress balance sheet in a business generating strong near-term cash returns, but the stock is pricing in a cyclical earnings peak and offers limited margin of safety at current levels.", "bull_case": "The company's 11.2 percent year-over-year revenue growth, 43.6 percent gross margin, and low 0.20 debt-to-equity ratio position it to sustain healthy cash generation even if oil prices moderate, while 25 of 30 analysts rate it buy or strong buy and consensus has been improving over the last three months.", "bear_case": "Energy earnings are cyclically elevated right now given commodity prices, and at 20.4x trailing earnings Chevron is not cheap for a sector that swings sharply with macro conditions. The stock has already returned 34.5 percent over the last 12 months excluding the most recent month, leaving limited room for disappointment before sentiment shifts. An economic slowdown or sustained lower oil prices would pressure both earnings and the energy sector broadly, while the 3.4 percent upside to analyst mean target of 221.03 dollars suggests the market has already priced in a constructive outlook.", "score_composite": 0.657, "scores": {"value": 0.667, "momentum": 0.687, "quality": 0.833, "sentiment": 0.588, "catalyst": 0.546}, "analyst": {"strong_buy": 7, "buy": 18, "hold": 4, "sell": 1, "strong_sell": 0, "total": 30}, "hero_alt_1": "+34.5%", "hero_alt_2": "25 of 30"}, {"rank": 12, "ticker": "BMY", "name": "Bristol-Myers Squibb Co", "sector": "Healthcare", "is_featured": false, "price": 64.41, "day_chg": -0.43, "pe_ttm": 14.17, "pb": 5.27, "roe": 46.76, "net_margin": 71.66, "rev_growth": 3.11, "w52_pos": 0.838, "w52_high": 68.64, "w52_low": 42.52, "mean_target": 67.63, "upside_pct": 5.0, "has_earnings": false, "risk_tag": "Quality", "thesis": "Bristol-Myers Squibb is trading at a reasonable 14.2x trailing earnings with 25 of 30 analysts recommending buy or strong buy, but elevated operating margins suggest current earnings may not be sustainable. The 5% upside to consensus targets leaves little margin for error if profitability normalizes.", "bull_case": "BMY's 46.8% return on equity and 71.7% gross margin demonstrate strong underlying business quality and pricing power in its drug portfolio. With operating margins running 1.9x their 5-year average at 25.5%, if the company can maintain even a portion of this elevated profitability while growing revenue, current valuation appears fair.", "bear_case": "The biggest risk is earnings disappointment when operating margins inevitably compress back toward the 13.6% historical average, which would meaningfully reduce per-share profitability and justify lower valuations. The stock has already returned 41.6% over the past year, and at 5% upside to analyst targets, most of the near-term catalyst appears priced in. BMY carries a high 1.93 debt-to-equity ratio, meaning margin compression would squeeze both earnings and financial flexibility in a slowing economy or rising rate environment.", "score_composite": 0.584, "scores": {"value": 0.667, "momentum": 0.76, "quality": 0.571, "sentiment": 0.484, "catalyst": 0.654}, "analyst": {"strong_buy": 7, "buy": 8, "hold": 18, "sell": 2, "strong_sell": 0, "total": 35}, "hero_alt_1": "+41.6%", "hero_alt_2": "15 of 35"}, {"rank": 18, "ticker": "GOOGL", "name": "Alphabet Inc", "sector": "Comm Services", "is_featured": false, "price": 330.65, "day_chg": -2.28, "pe_ttm": 16.57, "pb": 6.76, "roe": 50.84, "net_margin": 60.9, "rev_growth": 20.05, "w52_pos": 0.555, "w52_high": 408.61, "w52_low": 233.23, "mean_target": 429.65, "upside_pct": 29.9, "has_earnings": false, "risk_tag": "Quality", "thesis": "Alphabet is firing on all cylinders with 20% revenue growth, exceptional profitability metrics that rival the best operators in tech, and 63 of 70 analysts rating it a buy or strong buy. The stock has climbed 45% over the past year but still sits 30% below consensus targets, leaving room to run on fundamental strength.", "bull_case": "The company is printing cash with a 50.8% return on equity and 60.9% gross margins while growing revenue at 20% year-over-year, showing that scale and pricing power remain intact. Most recent earnings have moved analysts toward more bullish calls, suggesting they see durability in this growth rather than cyclical noise.", "bear_case": "Alphabet trades at 16.6 times trailing earnings with a price-to-sales ratio of 9.1x, which is not cheap by historical standards. There is execution risk around artificial intelligence monetization and new product adoption, and if the 20% revenue growth proves cyclically elevated and normalizes downward, a multiple contraction could offset further share gains. Broad economic slowdown or rising interest rates could pressure tech valuations more severely than the current 2.72x current ratio and conservative 0.15x debt-to-equity balance sheet would protect against.", "score_composite": 0.553, "scores": {"value": 0.318, "momentum": 0.797, "quality": 0.864, "sentiment": 0.866, "catalyst": 0.248}, "analyst": {"strong_buy": 20, "buy": 43, "hold": 7, "sell": 0, "strong_sell": 0, "total": 70}, "hero_alt_1": "+44.9%", "hero_alt_2": "63 of 70"}, {"rank": 20, "ticker": "LOW", "name": "Lowe's Companies Inc", "sector": "Cons Discretionary", "is_featured": false, "price": 198.6, "day_chg": -1.1, "pe_ttm": 16.78, "pb": 316.28, "roe": 264.53, "net_margin": 33.08, "rev_growth": 8.16, "w52_pos": -0.008, "w52_high": 293.06, "w52_low": 199.34, "mean_target": 326.48, "upside_pct": 29.4, "has_earnings": false, "risk_tag": "Value", "thesis": "Lowe's stock is down 24.5% over the past year yet trades at 16.8x trailing earnings with 29 of 41 analysts rating it buy or strong buy. The company is generating 264.5% return on equity while growing revenues 8.2% year-over-year, suggesting the selloff may have created a tactical entry point.", "bull_case": "Strong operational returns are undeniable. Lowe's is producing 264.5% ROE on a gross margin of 33.1%, and the 8.2% revenue growth shows demand for home improvement and repair remains resilient even as consumer confidence wavers. At 16.8x trailing earnings, the stock appears reasonably priced relative to its profit generation.", "bear_case": "First, home improvement spending is inherently cyclical and vulnerable to recession. A downturn in housing starts or consumer discretionary spending could sink earnings faster than current consensus expects. Second, that stratospheric 264.5% ROE raises red flags about capital structure distortion rather than genuine operational excellence, and a shift in consumer behavior could compress margins or force costly inventory adjustments. Third, the company carries a 52.23 debt-to-equity ratio paired with a current ratio of just 1.10, leaving limited financial flexibility if credit markets tighten or same-store sales disappoint.", "score_composite": 0.549, "scores": {"value": 1.0, "momentum": 0.067, "quality": 0.8, "sentiment": 0.473, "catalyst": 0.524}, "analyst": {"strong_buy": 11, "buy": 17, "hold": 12, "sell": 1, "strong_sell": 0, "total": 41}, "hero_alt_1": "-24.5%", "hero_alt_2": "28 of 41"}, {"rank": 21, "ticker": "BAC", "name": "Bank of America Corp", "sector": "Financials", "is_featured": false, "price": 62.67, "day_chg": 0.45, "pe_ttm": 13.06, "pb": 1.33, "roe": 11.13, "net_margin": 81.73, "rev_growth": 99.37, "w52_pos": 0.866, "w52_high": 65.22, "w52_low": 46.12, "mean_target": 68.92, "upside_pct": 10.0, "has_earnings": true, "risk_tag": "Value", "thesis": "Bank of America trades at a reasonable 13.1x trailing earnings with 10 percent upside to analyst targets, but the 99 percent year-over-year revenue growth masks structural concerns in banking profitability and capital efficiency that deserve closer inspection.", "bull_case": "The stock is up 25 percent over the past year and 23 of 30 analysts rate it buy or strong buy, suggesting broad conviction that recent momentum reflects genuine improvement in bank earnings power as net interest margins stabilize at higher rate levels. At just 1.3x book value with an 11.1 percent return on equity, BAC appears to offer modest value for a systemically important U.S. bank.", "bear_case": "The 99 percent revenue growth figure is misleading given it reflects mark-to-market accounting and investment gains typical of rising rate environments\u2014actual net interest income and core banking revenue growth are far more modest, and this tailwind may reverse if rate expectations shift. The current ratio of 0.16 is dangerously low even for a bank, and the 2.43 debt-to-equity ratio remains elevated relative to pre-pandemic norms, leaving limited cushion if loan losses accelerate. A cyclical slowdown in the economy or unexpected decline in net interest margins could quickly compress earnings and disappoint investors who have already pushed the stock up 25 percent.", "score_composite": 0.548, "scores": {"value": 0.727, "momentum": 0.593, "quality": 0.636, "sentiment": 0.406, "catalyst": 0.468}, "analyst": {"strong_buy": 6, "buy": 17, "hold": 6, "sell": 0, "strong_sell": 0, "total": 29}, "hero_alt_1": "+25.4%", "hero_alt_2": "23 of 29"}, {"rank": 22, "ticker": "NEE", "name": "Nextera Energy Inc", "sector": "Utilities", "is_featured": false, "price": 82.65, "day_chg": -1.41, "pe_ttm": 18.54, "pb": 3.2, "roe": 16.82, "net_margin": 45.97, "rev_growth": 10.82, "w52_pos": 0.454, "w52_high": 98.75, "w52_low": 69.24, "mean_target": 99.58, "upside_pct": 20.5, "has_earnings": false, "risk_tag": "Quality", "thesis": "NextEra Energy trades at 18.5 times trailing earnings with a 16.8 percent return on equity and a healthy 10.8 percent revenue growth rate. The analyst mean price target of $99.58 implies 20.5 percent upside, though sentiment on the stock has deteriorated over the last three months despite 18 of 27 analysts rating it buy or strong buy.", "bull_case": "NextEra's 46 percent gross margin and consistent double-digit revenue growth position it as one of the better-capitalized utility plays during a period of rising energy infrastructure demand. The 20.5 percent upside to consensus targets suggests meaningful room to run if the company executes on its growth pipeline.", "bear_case": "The stock has already returned 18.3 percent over the past 12 months excluding the last month, and analyst consensus has deteriorated recently, which may signal that near-term catalysts are already priced in or that conviction is waning among professional investors. NextEra carries a debt-to-equity ratio of 1.93 and a current ratio of only 0.53, leaving little room for maneuver if interest rates remain elevated or refinancing becomes expensive. A slowdown in renewable energy spending or a miss on earnings execution could quickly reverse sentiment given the valuation sits at a premium 3.2 times book value.", "score_composite": 0.546, "scores": {"value": 0.4, "momentum": 0.52, "quality": 1.0, "sentiment": 0.459, "catalyst": 0.347}, "analyst": {"strong_buy": 8, "buy": 10, "hold": 9, "sell": 1, "strong_sell": 0, "total": 28}, "hero_alt_1": "+18.3%", "hero_alt_2": "18 of 28"}, {"rank": 43, "ticker": "PM", "name": "Philip Morris International Inc", "sector": "Cons Staples", "is_featured": false, "price": 185.71, "day_chg": 0.53, "pe_ttm": 26.61, "pb": 1368.86, "roe": 575.44, "net_margin": 67.51, "rev_growth": 8.93, "w52_pos": 0.664, "w52_high": 207.76, "w52_low": 142.11, "mean_target": 204.6, "upside_pct": 10.2, "has_earnings": true, "risk_tag": "Quality", "thesis": "Philip Morris is trading at modest upside to analyst targets with 20 of 27 analysts calling it a buy or strong buy, but elevated valuations and deteriorating balance sheet metrics raise questions about whether the current 8.9 percent revenue growth justifies a 26.6x price-to-earnings multiple for a mature tobacco business.", "bull_case": "The company generated strong gross margins of 67.5 percent and delivered 8.9 percent revenue growth year over year, signaling pricing power and demand resilience in its smoke-free product transition. With 27 analysts covering the stock and 20 recommending buy or strong buy, there is consensus that Philip Morris can sustain earnings momentum, leaving a 10.2 percent cushion to the mean target of $204.60.", "bear_case": "First, Philip Morris faces execution risk on its shift toward reduced-risk products, which remain unprofitable in many geographies and could see adoption slower than management projects if consumer behavior shifts or regulation tightens. Second, the stock's valuation appears stretched on traditional metrics: at 26.6x trailing earnings it prices in sustained earnings power that may not materialize if tobacco volumes contract faster than smoke-free products can replace them, particularly given the company is already generating only $0.42 of gross profit per dollar of assets. Third, a near-term economic slowdown or shift in currency markets could pressure a company with a debt-to-equity ratio of 186 percent and a current ratio of 0.98, leaving limited financial flexibility.", "score_composite": 0.478, "scores": {"value": 0.125, "momentum": 0.473, "quality": 1.0, "sentiment": 0.582, "catalyst": 0.473}, "analyst": {"strong_buy": 9, "buy": 11, "hold": 7, "sell": 0, "strong_sell": 0, "total": 27}, "hero_alt_1": "+14.9%", "hero_alt_2": "20 of 27"}, {"rank": 52, "ticker": "FCX", "name": "Freeport-McMoRan Inc", "sector": "Materials", "is_featured": false, "price": 76.23, "day_chg": -0.51, "pe_ttm": 37.13, "pb": 4.5, "roe": 15.26, "net_margin": 27.06, "rev_growth": -24.23, "w52_pos": 0.911, "w52_high": 80.24, "w52_low": 35.15, "mean_target": 75.06, "upside_pct": -1.5, "has_earnings": true, "risk_tag": "Speculative", "thesis": "Freeport-McMoRan has recovered sharply on copper upside, but faces a critical reset on valuation and demand. At 37 times trailing earnings with no analyst upside and a weak revenue outlook, the risk-reward has flipped.", "bull_case": "Copper demand from AI infrastructure and renewable energy transition remains structural. If the company executes on growth projects and commodity prices hold, the 15.3% return on equity could expand, rewarding patient holders who ignore near-term cyclicality.", "bear_case": "Revenue fell 24.2% year over year while the stock gained 63% in the past year excluding the last month, suggesting the market has already priced copper cycle strength. The 37.1 times trailing earnings multiple is aggressive for a cyclical commodity producer facing demand uncertainty. If global growth slows or copper prices retreat, the stock has limited downside protection, and analysts see no upside from here at 75.06 per share.", "score_composite": 0.462, "scores": {"value": 0.526, "momentum": 0.867, "quality": 0.434, "sentiment": 0.324, "catalyst": 0.554}, "analyst": {"strong_buy": 5, "buy": 19, "hold": 5, "sell": 0, "strong_sell": 1, "total": 30}, "hero_alt_1": "+63.0%", "hero_alt_2": "24 of 30"}, {"rank": 94, "ticker": "AMT", "name": "American Tower Corp", "sector": "Real Estate", "is_featured": false, "price": 175.43, "day_chg": -0.17, "pe_ttm": 23.98, "pb": 20.49, "roe": 91.62, "net_margin": 73.77, "rev_growth": 6.65, "w52_pos": 0.393, "w52_high": 199.13, "w52_low": 160.06, "mean_target": 219.3, "upside_pct": 25.0, "has_earnings": false, "risk_tag": "Quality", "thesis": "American Tower offers meaningful upside to analyst targets with improving sentiment, but a heavy debt load and thin liquidity create execution risk that deserves caution before buying near all-time highs.", "bull_case": "Wall Street sees 25% upside to the $219.30 analyst target, and consensus has been improving steadily with 25 of 30 analysts rating it buy or strong buy. The 73.8% gross margin and 6.7% revenue growth signal a stable tower business with pricing power in a mobile-dependent economy.", "bear_case": "American Tower carries a debt-to-equity ratio of 10.0x, which is extremely high and leaves little room for error if interest rates remain elevated or tenant demand softens. The stock has already declined 9.3% over the past year excluding the last month, suggesting the market may have already priced in much of the recovery that Wall Street now expects. At 24x trailing earnings and a current ratio of only 0.35, the company has limited cash flexibility to weather operational hiccups or refinancing challenges in a higher-rate environment.", "score_composite": 0.403, "scores": {"value": 0.404, "momentum": 0.207, "quality": 0.343, "sentiment": 0.879, "catalyst": 0.346}, "analyst": {"strong_buy": 8, "buy": 17, "hold": 4, "sell": 0, "strong_sell": 0, "total": 29}, "hero_alt_1": "-9.3%", "hero_alt_2": "25 of 29"}]};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let picks        = DATA.picks;
+let sectorFilter = "all";
+let sortKey      = 'score_composite';
+let sortAsc      = false;
+let selectedIdx  = null;
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const fmt  = (v, dp=2) => v != null ? Number(v).toFixed(dp) : '—';
+const fmtP = (v)       => v != null ? (v >= 0 ? '+' : '') + Number(v).toFixed(1) + '%' : '—';
+const fmtD = (v)       => v != null ? '$' + Number(v).toFixed(2) : '—';
+const clamp = (v,mn,mx)=> Math.min(mx, Math.max(mn, v));
+
+function riskClass(tag) {
+  const map = { Growth:'risk-Growth', Value:'risk-Value', Quality:'risk-Quality',
+                Speculative:'risk-Speculative', Turnaround:'risk-Turnaround' };
+  return map[tag] || 'risk-default';
+}
+
+// ── Render Hero ─────────────────────────────────────────────────────────────
+function renderHero(p) {
+  document.getElementById('h-ticker').textContent  = p.ticker;
+  document.getElementById('h-name').textContent    = p.name;
+  document.getElementById('h-price').textContent   = fmtD(p.price);
+  document.getElementById('week-label').textContent = DATA.week_label;
+  document.getElementById('gen-date').textContent   = DATA.generated_at;
+
+  document.getElementById('h-target').textContent = p.mean_target ? fmtD(p.mean_target) : '—';
+  document.getElementById('h-upside').textContent = p.upside_pct != null ? fmtP(p.upside_pct) : '—';
+
+  document.getElementById('h-thesis').textContent = p.thesis || 'Analysis pending.';
+
+  const riskEl = document.getElementById('h-risk');
+  riskEl.textContent  = p.risk_tag || '—';
+  riskEl.className    = 'risk-pill ' + riskClass(p.risk_tag);
+
+  // Analyst bar
+  const a = p.analyst;
+  const t = a.total || 1;
+  document.getElementById('analyst-bar').innerHTML = `
+    <div class="ab-sb" style="width:${a.strong_buy/t*100}%"></div>
+    <div class="ab-b"  style="width:${a.buy/t*100}%"></div>
+    <div class="ab-h"  style="width:${a.hold/t*100}%"></div>
+    <div class="ab-s"  style="width:${a.sell/t*100}%"></div>
+    <div class="ab-ss" style="width:${a.strong_sell/t*100}%"></div>`;
+  document.getElementById('analyst-legend').innerHTML = [
+    ['#1a6b3a','Strong Buy',a.strong_buy],
+    ['#3a9a5a','Buy',a.buy],
+    ['#c8c020','Hold',a.hold],
+    ['#d06020','Sell',a.sell],
+    ['#b52525','Strong Sell',a.strong_sell],
+  ].map(([c,l,n]) => `<span class="al-item"><span class="al-dot" style="background:${c}"></span>${l} ${n}</span>`).join('');
+
+  // 52w range
+  const pct = p.w52_pos != null ? Math.round(p.w52_pos * 100) : 50;
+  document.getElementById('w52-fill').style.width   = pct + '%';
+  document.getElementById('w52-marker').style.left  = pct + '%';
+  document.getElementById('w52-low').textContent    = fmtD(p.w52_low);
+  document.getElementById('w52-high').textContent   = fmtD(p.w52_high);
+  document.getElementById('w52-cur').textContent    = fmtD(p.price);
+
+  // Bull / Bear
+  document.getElementById('case-grid').innerHTML = `
+    <div class="case-card bull-card">
+      <div class="case-label bull-label">▲ Bull Case</div>
+      <div>${p.bull_case || '—'}</div>
+    </div>
+    <div class="case-card bear-card">
+      <div class="case-label bear-label">▼ Bear Case</div>
+      <div>${p.bear_case || '—'}</div>
+    </div>`;
+}
+
+// ── Render Watchlist ────────────────────────────────────────────────────────
+function renderTable() {
+  const filtered = sectorFilter === "all"
+    ? picks
+    : picks.filter(p => (p.sector || "Other") === sectorFilter);
+  const sorted = [...filtered].sort((a,b) => {
+    const av = a[sortKey] ?? -Infinity;
+    const bv = b[sortKey] ?? -Infinity;
+    return sortAsc ? av - bv : bv - av;
+  });
+
+  const scoreKeys = ['value','momentum','quality','sentiment','catalyst'];
+  const maxH = 20;
+
+  const rows = sorted.map((p, i) => {
+    const mini = scoreKeys.map(k => {
+      const h = Math.round(clamp(p.scores[k], 0, 1) * maxH);
+      return `<div class="mini-bar" style="height:${maxH}px">
+                <div class="mini-fill" style="height:${h}px"></div>
+              </div>`;
+    }).join('');
+
+    const compColor = p.score_composite >= 0.65 ? 'var(--green)'
+                    : p.score_composite >= 0.55 ? 'var(--accent2)'
+                    : 'var(--ink3)';
+
+    return `<tr class="${p.is_featured ? 'featured-row':''} ${selectedIdx===i?'selected':''}"
+               data-idx="${i}">
+      <td style="color:var(--ink3);font-family:var(--mono);font-size:11px">${p.rank}</td>
+      <td>
+        <div class="ticker-cell">
+          <div>
+            <div class="ticker-sym">${p.ticker}${p.is_featured ? ' <span class="featured-star">★</span>':''}</div>
+            <div class="ticker-name">${p.name.length > 28 ? p.name.slice(0,28)+'…' : p.name}</div>
+          </div>
+          ${p.has_earnings ? '<span class="earnings-badge">Earnings</span>' : ''}
+        </div>
+      </td>
+      <td><span class="sector-pill">${p.sector || '—'}</span></td>
+      <td class="price-cell">${fmtD(p.price)}</td>
+      <td class="price-cell" style="color:var(--ink3)">${fmtD(p.mean_target)}</td>
+      <td class="upside-cell">${p.upside_pct != null ? fmtP(p.upside_pct) : '—'}</td>
+      <td style="font-family:var(--mono);font-size:12px">${p.pe_ttm != null ? fmt(p.pe_ttm,1)+'x' : '—'}</td>
+      <td style="font-family:var(--mono);font-size:12px">${p.roe != null ? fmt(p.roe,1)+'%' : '—'}</td>
+      <td style="font-family:var(--mono);font-size:12px">${p.rev_growth != null ? fmtP(p.rev_growth) : '—'}</td>
+      <td><div class="mini-score">${mini}</div></td>
+      <td class="composite-cell" style="color:${compColor}">${fmt(p.score_composite,3)}</td>
+      <td><span class="risk-pill-light">${p.risk_tag || '—'}</span></td>
+    </tr>`;
+  });
+
+  window._sortedPicks = sorted;
+  window._filteredPicks = filtered;
+  document.getElementById('watchlist-body').innerHTML = rows.join('');
+
+  document.querySelectorAll('#watchlist-body tr').forEach((tr, i) => {
+    tr.addEventListener('click', () => selectRow(i, window._sortedPicks));
+  });
+}
+
+// ── Select row → update hero ────────────────────────────────────────────────
+function selectRow(i, sortedArr) {
+  const arr = sortedArr || window._sortedPicks;
+  const p   = arr[i];
+
+  selectedIdx = i;
+  renderTable();
+
+  const heroLeft = document.querySelector('.hero-left');
+  heroLeft.style.transition = 'opacity 0.15s';
+  heroLeft.style.opacity = '0';
+  setTimeout(() => {
+    renderHero(p);
+  const sectorBadge = document.getElementById('hero-sector');
+  if (sectorBadge) sectorBadge.textContent = p.sector || '';
+  document.getElementById('hero-eyebrow').textContent =
+      p.is_featured ? '★ Featured Pick' : '★ Viewing Pick #' + p.rank;
+    heroLeft.style.opacity = '1';
+  }, 150);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Sort ─────────────────────────────────────────────────────────────────────
+function sortTable(key) {
+  if (sortKey === key) { sortAsc = !sortAsc; }
+  else { sortKey = key; sortAsc = false; }
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  selectedIdx = null;
+  renderTable();
+}
+
+// ── Sector filter ────────────────────────────────────────────────────────────
+function filterSector(val) {
+  sectorFilter = val;
+  selectedIdx  = null;
+  renderTable();
+}
+
+function populateSectorDropdown() {
+  const sectors = [...new Set(picks.map(p => p.sector || "Other"))].sort();
+  const sel = document.getElementById('sector-filter');
+  sectors.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+populateSectorDropdown();
+const featured = picks.find(p => p.is_featured) || picks[0];
+renderHero(featured);
+renderTable();
+</script>
+</body>
+</html>
