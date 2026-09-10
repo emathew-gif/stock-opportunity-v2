@@ -35,6 +35,9 @@ jobs:
 
       - name: Publish presentation variants
         run: python make_variants.py
+              
+      - name: Build client emailer
+        run: python make_email.py
 
       - name: Commit and push pages and archive
         run: |
