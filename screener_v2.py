@@ -13,7 +13,8 @@ Nothing in the v1 repo is ever written to. Fetching the template rather than
 copying it means this page stays visually identical to v1 if the template is
 ever restyled.
 
-Emits the identical DATA shape as v1 so the same template renders it unchanged.
+Emits the identical DATA shape as v1 so the same template renders it unchanged,
+plus a sector_leaders list used by the By Sector view.
 
 WHAT DIFFERS FROM v1  (see Methodology_v2_Changes.docx)
   structural
@@ -22,6 +23,8 @@ WHAT DIFFERS FROM v1  (see Methodology_v2_Changes.docx)
     - cyclical guard: value score scaled down when TTM margin >> 5y margin
     - stale-reference guard: upside discarded when price sits outside its own
       52-week range (stock-split signature)
+    - Value and Quality ranked WITHIN sector; Momentum, Sentiment and Catalyst
+      stay universe-wide
   value      yields not multiples (negatives rank worst); pbQuarterly not pbAnnual;
              adds sales yield and EBITDA/EV
   momentum   12-1 price return (was: mid-range 52w position, which penalised winners)
@@ -67,6 +70,7 @@ MIN_PENALTY   = 0.20   # composite = (1-p)*weighted_mean + p*min(sub-scores)
 CYC_THRESHOLD = 1.50   # TTM operating margin this many x the 5y average triggers the guard
 CYC_FLOOR     = 0.50   # hardest the guard may scale a value score
 PEAD_WINDOW   = 60     # days over which post-earnings drift decays to zero
+MIN_SECTOR_N  = 5      # a sector needs at least this many names to rank within it
 
 SECTOR_MAP = {
     "NVDA":"Technology","AAPL":"Technology","MSFT":"Technology","AVGO":"Technology",
@@ -96,6 +100,7 @@ SECTOR_MAP = {
     "SCHW":"Financials","BLK":"Financials","COF":"Financials","CB":"Financials",
     "PGR":"Financials","SPGI":"Financials","CME":"Financials","ICE":"Financials",
     "PNC":"Financials","USB":"Financials","BK":"Financials","BX":"Financials",
+    "C":"Financials","MRSH":"Financials",
     "LLY":"Healthcare","JNJ":"Healthcare","UNH":"Healthcare","ABBV":"Healthcare",
     "MRK":"Healthcare","ABT":"Healthcare","AMGN":"Healthcare","TMO":"Healthcare",
     "GILD":"Healthcare","ISRG":"Healthcare","DHR":"Healthcare","SYK":"Healthcare",
@@ -378,6 +383,30 @@ df["score_catalyst"] = (pr(df["sue"])              * 0.50 +
                         df["pead_decay"].fillna(0) * 0.30 +
                         pr(df["eps_growth"])       * 0.20)
 
+# ── Sector neutralisation of Value and Quality ───────────────────────────────
+# These two buckets are structurally biased by sector. A technology company
+# trades at roughly 6x the book multiple of an energy company regardless of
+# merit (sector median P/B on 2026-09-07: Technology 14.2, Energy 2.2), and a
+# REIT shows low ROE by construction. Ranked universe-wide, "Cheap" and "Good"
+# therefore measure WHICH SECTOR a name sits in more than whether it is cheap
+# or good -- Energy took 4 of the top 30 against an expected 1.2, while
+# Utilities, Materials and Real Estate took none at all.
+#
+# Momentum, Sentiment and Catalyst are deliberately left universe-wide: a sector
+# that is genuinely trending, or genuinely being upgraded, is real information
+# rather than an accounting artefact.
+#
+# Sectors with fewer than MIN_SECTOR_N names keep their universe-wide score --
+# you cannot rank meaningfully within a group of two or three.
+df["score_value_uni"]   = df["score_value"]
+df["score_quality_uni"] = df["score_quality"]
+_big = df.groupby("sector")["ticker"].transform("size") >= MIN_SECTOR_N
+for _c in ("score_value", "score_quality"):
+    df[_c] = np.where(_big, df.groupby("sector")[_c].rank(pct=True), df[_c])
+print(f"  sector-neutralised Value and Quality across "
+      f"{int(df.loc[_big, 'sector'].nunique())} sectors "
+      f"({int((~_big).sum())} names in small sectors kept universe-wide)")
+
 SUB = ["score_value", "score_momentum", "score_quality", "score_sentiment", "score_catalyst"]
 df["weighted_mean"] = sum(df[f"score_{k}"] * v for k, v in WEIGHTS.items())
 df["worst_lens"]    = df[SUB].min(axis=1)
@@ -497,16 +526,36 @@ def parse_sections(text):
     return out
 
 top_picks = df.head(TOP_N_OUTPUT).copy()
-theses = []
-for _, row in top_picks.iterrows():
-    print(f"\n[{int(row['rank']):02d}] Calling Claude for {row['ticker']}...")
-    theses.append(generate_thesis(row))
+
+# Best-scoring name in each real sector, for the "By Sector" view. "Other" is the
+# fallback bucket for tickers missing from SECTOR_MAP, not a sector, so exclude it.
+leaders = (df[df["sector"] != "Other"]
+             .sort_values("score_composite", ascending=False)
+             .groupby("sector", as_index=False).first()
+             .sort_values("score_composite", ascending=False)
+             .reset_index(drop=True))
+
+need = pd.concat([top_picks, leaders[~leaders["ticker"].isin(top_picks["ticker"])]])
+need = need.drop_duplicates("ticker")
+print(f"{len(need)} names need a thesis "
+      f"({len(top_picks)} ranked + {len(need)-len(top_picks)} extra sector leaders)")
+
+theses = {}
+for _, row in need.iterrows():
+    print(f"\n[rank {int(row['rank']):03d}] Calling Claude for {row['ticker']}...")
+    theses[row["ticker"]] = generate_thesis(row)
     time.sleep(5)
 
-top_picks["thesis_raw"] = theses
-for k in ["thesis", "bull", "bear", "risk_tag"]:
-    top_picks[k] = top_picks["thesis_raw"].apply(lambda r, kk=k: parse_sections(r)[kk])
-empty = top_picks["thesis"].eq("").sum()
+def attach_theses(frame):
+    f = frame.copy()
+    f["thesis_raw"] = f["ticker"].map(theses).fillna("")
+    for k in ["thesis", "bull", "bear", "risk_tag"]:
+        f[k] = f["thesis_raw"].apply(lambda r, kk=k: parse_sections(r)[kk])
+    return f
+
+top_picks = attach_theses(top_picks)
+leaders   = attach_theses(leaders)
+empty = int(top_picks["thesis"].eq("").sum() + leaders["thesis"].eq("").sum())
 print(f"\n✓ Theses generated" + (f"  ⚠ {empty} empty" if empty else "  All populated"))
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -521,26 +570,14 @@ def sf(v, dp=2):
     except Exception:
         return None
 
-top_picks = top_picks.copy()
-top_picks["is_featured"] = False
-top_picks.iloc[0, top_picks.columns.get_loc("is_featured")] = True
-
-output = {
-    "generated_at": TODAY,
-    "week_label":   WEEK_LABEL,
-    "sector":       "Broad Market",
-    "universe":     f"SPY Top {TOP_N_HOLDINGS} · v2",
-    "weights":      WEIGHTS,
-    "picks":        [],
-}
-
-for _, row in top_picks.iterrows():
-    output["picks"].append({
+def pick_dict(row, featured=False):
+    """Same shape v1 emits, so the shared HTML template renders it unchanged."""
+    return {
         "rank":            int(row["rank"]),
         "ticker":          row["ticker"],
         "name":            row["name"],
         "sector":          row["sector"],
-        "is_featured":     bool(row["is_featured"]),
+        "is_featured":     bool(featured),
         "price":           sf(row["price"]),
         "day_chg":         sf(row["day_chg"]),
         "pe_ttm":          sf(row["pe_ttm"]),
@@ -574,7 +611,23 @@ for _, row in top_picks.iterrows():
             "strong_sell": int(row["strong_sell"]),
             "total":       int(row["total_recs"]),
         },
-    })
+    }
+
+output = {
+    "generated_at": TODAY,
+    "week_label":   WEEK_LABEL,
+    "sector":       "Broad Market",
+    "universe":     f"SPY Top {TOP_N_HOLDINGS} · v2",
+    "weights":      WEIGHTS,
+    "neutralised":  "Value and Quality ranked within sector",
+    # B — the ranking, with Value and Quality sector-neutralised
+    "picks":          [pick_dict(r, i == 0) for i, (_, r) in enumerate(top_picks.iterrows())],
+    # C — best-scoring name in each sector, carrying its overall rank
+    "sector_leaders": [pick_dict(r, i == 0) for i, (_, r) in enumerate(leaders.iterrows())],
+}
+print(f"  picks: {len(output['picks'])}   sector_leaders: {len(output['sector_leaders'])}")
+print("  sector leaders (overall rank): " +
+      ", ".join(f"{p['ticker']}={p['rank']}" for p in output["sector_leaders"]))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # STEP 7 — Inject into the fetched template and write docs/index.html
