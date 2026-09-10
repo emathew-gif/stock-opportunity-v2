@@ -2,7 +2,7 @@
 """
 Presentation variants — runs AFTER screener_v2.py, changes no scoring.
 
-screener_v2.py writes docs/index.html. This reads it back, then publishes three
+screener_v2.py writes docs/index.html. This reads it back, then publishes four
 views of the same ranking so they can be compared side by side:
 
   docs/index.html       Baseline      featured pick = rank 1, as scored
@@ -11,9 +11,12 @@ views of the same ranking so they can be compared side by side:
   docs/conviction.html  Conviction    same featured rule, and the two forecast-based
                                       hero metrics are replaced with realised ones:
                                       12-month return, and analyst buy count
+  docs/sector.html      By Sector     the best-scoring name in EACH sector, each row
+                                      carrying its overall rank out of 150
 
-The ranking is IDENTICAL in all three. Only which pick fills the hero panel, and
-what the hero panel displays, changes. No sub-score, weight or rank is touched.
+The ranking is IDENTICAL in all of them. Only which pick fills the hero panel,
+what that panel displays, and which rows are listed changes. No sub-score,
+weight or rank is touched.
 """
 import json, re, copy, glob, csv, os
 from datetime import datetime
@@ -25,6 +28,7 @@ VARIANTS = [
     ("index.html",      "Baseline",      "baseline"),
     ("featured.html",   "Upside ≥ 15%", "floor"),
     ("conviction.html", "Conviction",    "conviction"),
+    ("sector.html",     "By Sector",     "sector"),
 ]
 
 HERO_OVERRIDE = """
@@ -87,6 +91,17 @@ def add_hero_alts(picks):
 
 def build(template, data, key):
     d = copy.deepcopy(data)
+
+    if key == "sector":
+        # One name per sector, best-scoring first. Ranks are the OVERALL ranks,
+        # so the list reads 1, 3, 4, 12, 15... -- that gap is the point: it shows
+        # how far down the index you go to find the best name in each sector.
+        leaders = d.get("sector_leaders") or []
+        if not leaders:
+            return None                     # older payload with no leaders -- skip
+        d["picks"] = leaders
+        d["week_label"] = d["week_label"] + " · by sector"
+
     picks = d["picks"]
 
     if key in ("floor", "conviction"):
@@ -107,7 +122,7 @@ def build(template, data, key):
         d["week_label"] = d["week_label"] + " · conviction view"
 
     # strip any nav injected by a previous run so this stays idempotent
-    html = re.sub(r'<a href="\./(?:index|featured|conviction)\.html" '
+    html = re.sub(r'<a href="\./(?:index|featured|conviction|sector)\.html" '
                   r'class="masthead-label"[^>]*>.*?</a>', "", template, flags=re.DOTALL)
     m = re.search(r'const DATA = \{.*?\};', html, re.DOTALL)
     if not m:
@@ -133,20 +148,26 @@ def main():
         raise SystemExit("Could not read DATA from " + PAGE)
     data = json.loads(m.group(1))
     add_hero_alts(data["picks"])
+    if data.get("sector_leaders"):
+        add_hero_alts(data["sector_leaders"])
 
     print("=" * 60)
     print("Publishing presentation variants")
     print("=" * 60)
     for fn, label, key in VARIANTS:
         html = build(template, data, key)
+        if html is None:
+            print(f"  {fn:<24} skipped (no sector_leaders in payload)")
+            continue
         out = os.path.join("docs", fn)
         with open(out, "w") as f:
             f.write(html)
         d2 = json.loads(re.search(r'const DATA = (\{.*?\});\s*\n', html, re.DOTALL).group(1))
-        feat = [p for p in d2["picks"] if p["is_featured"]][0]
+        feat = [p for p in d2["picks"] if p["is_featured"]]
+        feat = feat[0] if feat else d2["picks"][0]
         print(f"  {out:<24} {label:<14} {len(d2['picks']):>2} rows  featured: "
               f"{feat['ticker']:<6} rank {feat['rank']:<3} upside {feat.get('upside_pct')}%")
-    print("\nRanking is identical across all three - only the hero panel differs.")
+    print("\nRanking is identical across all views - only the hero and the rows differ.")
 
 if __name__ == "__main__":
     main()
