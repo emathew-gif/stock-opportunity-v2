@@ -31,8 +31,8 @@ WHAT DIFFERS FROM v1  (see Methodology_v2_Changes.docx)
   quality    gross profits/assets, margin stability, leverage, liquidity added;
              revenue growth removed
   sentiment  3-month consensus REVISION (was: consensus level)
-  catalyst   standardised earnings surprise + post-announcement decay
-             (was: forward earnings-date flag)
+  catalyst   standardised earnings surprise + post-announcement decay, timed from
+             the real announcement date (was: forward earnings-date flag)
 """
 
 import os, json, re, time
@@ -61,6 +61,7 @@ API_SLEEP      = 0.5
 
 TODAY      = datetime.today().strftime("%Y-%m-%d")
 IN_45_DAYS = (datetime.today() + timedelta(days=45)).strftime("%Y-%m-%d")
+SINCE_120D = (datetime.today() - timedelta(days=120)).strftime("%Y-%m-%d")
 WEEK_LABEL = f"v2 · Week of {datetime.today().strftime('%d %b %Y')}"
 
 WEIGHTS = {"value": 0.25, "momentum": 0.10, "quality": 0.30,
@@ -159,7 +160,7 @@ def fetch_ticker(ticker):
         "profile":  safe(fh.company_profile2, symbol=ticker),
         "rec":      safe(fh.recommendation_trends, ticker),
         "target":   safe(fh.price_target, ticker),
-        "earnings": safe(fh.earnings_calendar, _from=TODAY, to=IN_45_DAYS, symbol=ticker),
+        "earnings": safe(fh.earnings_calendar, _from=SINCE_120D, to=IN_45_DAYS, symbol=ticker),
         "surprise": safe(fh.company_earnings, ticker),   # NEW in v2 — PEAD input
     }
 
@@ -208,34 +209,27 @@ def consensus(r):
     score = (sb*1.0 + b*0.75 + h*0.5 + s*0.25 + ss*0.0) / tot
     return score, (sb + b) / tot, sb, b, h, s, ss, tot
 
-def sue_and_decay(surprise_list):
-    """Standardised unexpected earnings + how recently it happened.
-    SUE = latest surprise / stdev of recent surprises (Bernard-Thomas).
-    Drift decays to zero over PEAD_WINDOW days after the announcement."""
+def compute_sue(surprise_list):
+    """Standardised unexpected earnings: the latest surprise divided by the stdev
+    of recent surprises (Bernard-Thomas).
+
+    The actual/estimate VALUES from company_earnings are reliable. Its "period"
+    field is NOT an announcement date -- it is a normalised calendar quarter-end,
+    so the drift window is timed from earnings_calendar instead."""
     if not surprise_list:
-        return None, 0.0, None
+        return None
     rows = [r for r in surprise_list if r.get("actual") is not None
                                      and r.get("estimate") is not None]
     if not rows:
-        return None, 0.0, None
+        return None
     rows = sorted(rows, key=lambda r: r.get("period", ""), reverse=True)
     surprises = [float(r["actual"]) - float(r["estimate"]) for r in rows[:8]]
     latest    = surprises[0]
     sd        = float(np.std(surprises[1:])) if len(surprises) > 2 else 0.0
     if sd > 0:
-        sue = latest / sd
-    else:
-        sp  = rows[0].get("surprisePercent")
-        sue = float(sp) / 100.0 if sp is not None else None
-    period = rows[0].get("period")
-    decay  = 0.0
-    if period:
-        try:
-            days  = (datetime.today() - datetime.strptime(period, "%Y-%m-%d")).days
-            decay = max(0.0, 1.0 - days / PEAD_WINDOW) if days >= 0 else 0.0
-        except Exception:
-            decay = 0.0
-    return sue, decay, period
+        return latest / sd
+    sp = rows[0].get("surprisePercent")
+    return float(sp) / 100.0 if sp is not None else None
 
 def parse(ticker):
     d   = raw.get(ticker, {})
@@ -302,8 +296,34 @@ def parse(ticker):
     if stale_ref:
         mean_target = None          # the target is on the same stale basis
 
-    # ── Catalyst: realised surprise, not a forward date ──────────────────────
-    sue, pead_decay, last_report = sue_and_decay(d.get("surprise"))
+    # ── Catalyst: realised surprise, timed from the real announcement date ───
+    # company_earnings["period"] is a normalised CALENDAR quarter-end, not the
+    # date results were announced. For an off-calendar fiscal year it can be
+    # weeks out and even in the future: CSCO's Q4 FY26 ended 25 Jul, was reported
+    # 12 Aug, and is stamped 2026-09-30. Timing the drift window off that made
+    # pead_decay exactly 0.00 for all 150 names on every run from launch to
+    # 2026-09-15 -- 18 names future-dated, the rest past the 60-day window.
+    # earnings_calendar carries the true announcement date, so use that. The one
+    # call now spans backwards and forwards, giving both the date and the
+    # earnings-imminent flag without an extra request.
+    cal   = ear.get("earningsCalendar") or []
+    past  = sorted((c for c in cal if c.get("epsActual") is not None
+                    and str(c.get("date", "")) <= TODAY),
+                   key=lambda c: c["date"])
+    ahead = [c for c in cal if c.get("epsActual") is None
+             and str(c.get("date", "")) > TODAY]
+    last_report  = past[-1]["date"] if past else None
+    has_earnings = bool(ahead)
+
+    sue, days_since_report, pead_decay = compute_sue(d.get("surprise")), None, 0.0
+    if last_report:
+        try:
+            days_since_report = (datetime.today()
+                                 - datetime.strptime(last_report, "%Y-%m-%d")).days
+            if days_since_report >= 0:
+                pead_decay = max(0.0, 1.0 - days_since_report / PEAD_WINDOW)
+        except Exception:
+            days_since_report, pead_decay = None, 0.0
 
     row    = df_holdings[df_holdings["Ticker"] == ticker]
     sector = row["sector"].values[0] if len(row) > 0 else "Other"
@@ -328,7 +348,8 @@ def parse(ticker):
         "strong_buy": sb, "buy": b, "hold": h, "sell": s, "strong_sell": ss,
         "total_recs": total,
         "sue": sue, "pead_decay": pead_decay, "last_report": last_report,
-        "has_earnings": bool(ear.get("earningsCalendar")),
+        "days_since_report": days_since_report,
+        "has_earnings": has_earnings,
     }
 
 valid = [t for t in tickers if raw.get(t, {}).get("quote")]
@@ -419,6 +440,8 @@ print("✓ Scoring complete")
 print(f"\n  cyclical guard triggered on {(df['cyc_guard'] < 1.0).sum()} names")
 print(f"  3-month revision available for {df['revision_3m'].notna().sum()} names")
 print(f"  earnings surprise available for {df['sue'].notna().sum()} names")
+print(f"  inside the {PEAD_WINDOW}-day drift window: {(df['pead_decay'] > 0).sum()} names "
+      f"(mean decay {df['pead_decay'].mean():.2f})")
 _stale = df["stale_ref"].sum()
 if _stale:
     print(f"  ⚠ upside suppressed on {_stale} name(s) with stale reference data "
@@ -464,6 +487,9 @@ def build_prompt(row):
     if row.get("stale_ref"):
         cyc += ("\nNOTE: analyst target data for this name is stale (likely a recent stock "
                 "split), so no upside figure is available. Do not mention price targets.")
+    since = ""
+    if pd.notna(row.get("days_since_report")):
+        since = f" ({int(row['days_since_report'])} days ago)"
     rev = ("improving" if (pd.notna(row["revision_3m"]) and row["revision_3m"] > 0)
            else "deteriorating" if (pd.notna(row["revision_3m"]) and row["revision_3m"] < 0)
            else "unchanged")
@@ -476,7 +502,7 @@ Debt to equity: {num(row['debt_equity'])}  |  Current ratio: {num(row['current_r
 Analyst mean target: {d(row['mean_target'])}  |  Upside: {pct(row['upside_pct'])}
 Analyst consensus over the last 3 months: {rev}
 Consensus: {row['strong_buy']} strong buy / {row['buy']} buy / {row['hold']} hold / {row['sell']} sell
-Most recent earnings: {row['last_report'] or 'N/A'}{cyc}
+Last reported results: {row['last_report'] or 'N/A'}{since}{cyc}
 
 Write exactly 4 labelled sections. Plain English only — no jargon, no markdown.
 Never mention score numbers or scoring systems. Reference the actual metrics above
