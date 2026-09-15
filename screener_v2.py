@@ -23,6 +23,8 @@ WHAT DIFFERS FROM v1  (see Methodology_v2_Changes.docx)
     - cyclical guard: value score scaled down when TTM margin >> 5y margin
     - stale-reference guard: upside discarded when price sits outside its own
       52-week range (stock-split signature)
+    - data-completeness guard: names with no valuation data are dropped, and the
+      run aborts rather than publish if too many are missing
     - Value and Quality ranked WITHIN sector; Momentum, Sentiment and Catalyst
       stay universe-wide
   value      yields not multiples (negatives rank worst); pbQuarterly not pbAnnual;
@@ -72,6 +74,8 @@ CYC_THRESHOLD = 1.50   # TTM operating margin this many x the 5y average trigger
 CYC_FLOOR     = 0.50   # hardest the guard may scale a value score
 PEAD_WINDOW   = 60     # days over which post-earnings drift decays to zero
 MIN_SECTOR_N  = 5      # a sector needs at least this many names to rank within it
+MAX_DATA_GAP  = 0.10   # abort rather than publish if more of the universe than this
+                       # returns no valuation data at all
 
 SECTOR_MAP = {
     "NVDA":"Technology","AAPL":"Technology","MSFT":"Technology","AVGO":"Technology",
@@ -355,6 +359,39 @@ def parse(ticker):
 valid = [t for t in tickers if raw.get(t, {}).get("quote")]
 df = pd.DataFrame([parse(t) for t in valid])
 print(f"✓ Parsed {len(df)} stocks")
+
+# ── Data-completeness guard ──────────────────────────────────────────────────
+# pr() fills a missing metric with 0.5 -- a NEUTRAL score. That is reasonable for
+# one absent input among several, but a name that returns NO valuation data at
+# all would still score 0.5 on Value, and for an expensive stock a neutral score
+# is an UPGRADE rather than a penalty.
+#
+# Observed 2026-09-15: a throttled Finnhub run returned nothing for 56 of 150
+# names. Thirteen of the 34 Technology names all landed on exactly 0.500, which
+# lifted the sector's median raw value from 0.209 to 0.496 and pushed CSCO from
+# 9th to 16th without a single one of its own numbers changing. MDT reached 6th
+# on no valuation data whatsoever.
+#
+# So: drop names we cannot value, and if too many are missing, abort instead of
+# publishing a page scored on defaults. This runs before anything is written.
+VALUE_INPUTS = ["earn_yld", "book_yld", "sales_yld", "ebitda_yld"]
+_no_value = df[VALUE_INPUTS].isna().all(axis=1)
+_gap = float(_no_value.mean())
+
+if _no_value.any():
+    print(f"  ⚠ {int(_no_value.sum())} of {len(df)} names returned no valuation data "
+          f"({_gap:.0%}): {sorted(df.loc[_no_value, 'ticker'].tolist())}")
+
+if _gap > MAX_DATA_GAP:
+    raise SystemExit(
+        f"\nABORT — {_gap:.0%} of the universe ({int(_no_value.sum())} of {len(df)}) returned "
+        f"no valuation data, above the {MAX_DATA_GAP:.0%} tolerance.\n"
+        f"This is usually Finnhub throttling rather than a real data change.\n"
+        f"Nothing has been written. Re-run rather than publish a page scored on defaults.")
+
+if _no_value.any():
+    df = df[~_no_value].reset_index(drop=True)
+    print(f"  dropped them — scoring {len(df)} names")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # STEP 4 — Score
