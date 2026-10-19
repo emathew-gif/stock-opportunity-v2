@@ -1,0 +1,4 @@
+# One ticker per line. Names you have chosen from the weekly v2 screen
+# and decided are worth putting in front of a client.
+# Lines starting with # are ignored. Overridden by the workflow's tickers input.
+NVDA
