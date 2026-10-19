@@ -1,0 +1,54 @@
+name: Client Briefs v3
+
+# Manual only. Type the tickers you have chosen; leave blank to use picks.txt.
+# Writes docs/v3/<TICKER>.html — touches nothing v2 owns.
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: 'Tickers to publish, comma separated (e.g. NVDA,CVX). Blank = picks.txt'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-briefs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build briefs
+        env:
+          FINNHUB_API_KEY:   ${{ secrets.FINNHUB_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TICKERS:           ${{ github.event.inputs.tickers }}
+          APP_LINK:          ${{ vars.APP_LINK }}
+          BOOKING_LINK:      ${{ vars.BOOKING_LINK }}
+        run: python brief_v3.py
+
+      - name: Commit and push briefs
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p /tmp/v3out
+          cp -r docs/v3/. /tmp/v3out/ 2>/dev/null || true
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p docs/v3
+          cp -r /tmp/v3out/. docs/v3/ 2>/dev/null || true
+          git add docs/v3
+          git diff --staged --quiet || git commit -m "v3 briefs: $(date +'%Y-%m-%d')"
+          git push
